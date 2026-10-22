@@ -52,7 +52,7 @@ const money = (value) => `¥${Number(value || 0).toLocaleString('zh-CN', { minim
 const rmbFixed = (value) => `￥${Number(value || 0).toFixed(2)}`;
 const numberText = (value) => Number(value || 0).toLocaleString('zh-CN');
 const formatPhone = (value) => value ? `${value.slice(0, 3)} **** ${value.slice(-4)}` : '未绑定';
-const idStatusLabel = () => ({ pass: '已认证', minor: '未成年人', invalid: '认证失败', service_error: '核验异常', unverified: '未认证' }[state.creator.idStatus] || '未认证');
+const idStatusLabel = () => state.creator.idStatus === 'pass' ? '已认证' : '未认证';
 const maskIdentityName = (value) => value ? `${value.slice(0, 1)}${'*'.repeat(Math.max(1, value.length - 1))}` : '未填写';
 const maskIdentityNumber = (value) => value ? `${value.slice(0, 2)}******${value.slice(-2)}` : '未填写';
 
@@ -66,7 +66,7 @@ function statusTag(status) {
 }
 
 function formatCount(value) {
-  if (value >= 10000) return `${(value / 10000).toFixed(value >= 100000 ? 0 : 1)}万`;
+  if (value >= 10000) return `${(value / 10000).toFixed(2)}万`;
   return numberText(value);
 }
 
@@ -130,13 +130,26 @@ function nextOnboardingStep() {
   }
   state.sheet = next;
   state.form = next === 'identity'
-    ? { name: state.creator.identity?.name || '', idNumber: '', identityEditing: !state.creator.identity }
+    ? { name: state.creator.identity?.name || '', idNumber: '', identityEditing: !state.creator.identity, identityConsent: false }
     : { bankName: state.creator.bank?.bankName || '', branchName: state.creator.bank?.branchName || '', cardNumber: '', platformError: '' };
   render();
 }
 
 function skipOnboardingStep() {
   if (!state.onboardingActive) return closeSheet();
+
+  // 实名认证被跳过或关闭时，本次登录不再继续触发银行卡绑定。
+  // 实名完成后再次登录，startOnboarding 会根据当前状态单独补弹银行卡。
+  if (state.sheet === 'identity' || state.sheet === 'identityCheck') {
+    state.onboardingQueue = [];
+    state.onboardingActive = false;
+    state.sheet = null;
+    state.form = {};
+    state.activeView = state.onboardingReturnView;
+    render();
+    return;
+  }
+
   state.sheet = null;
   state.form = {};
   nextOnboardingStep();
@@ -179,13 +192,13 @@ function verifyIdentity(result) {
     setToast('success', '实名认证通过', shouldEnterData ? '认证完成，正在进入数据中心' : '已确认境内居民身份证有效且已满 18 周岁');
   } else if (result === 'minor') {
     state.creator.verified = false;
-    state.creator.isMinor = true;
-    state.creator.idStatus = 'minor';
+    state.creator.isMinor = false;
+    state.creator.idStatus = 'unverified';
     setToast('error', '暂不支持自主提现', '识别为未成年人，请联系客服了解监护人处理方式');
   } else {
     state.creator.verified = false;
     state.creator.isMinor = false;
-    state.creator.idStatus = result === 'invalid' ? 'invalid' : 'service_error';
+    state.creator.idStatus = 'unverified';
     setToast('error', result === 'invalid' ? '证件校验失败' : '核验服务异常', result === 'invalid' ? '请确认身份证信息和有效期后重新提交' : '当前未完成认证，请稍后重试');
   }
   render();
@@ -194,9 +207,10 @@ function verifyIdentity(result) {
 function submitIdentity() {
   const name = String(state.form.name || '').trim();
   const idNumber = String(state.form.idNumber || '').replace(/\s/g, '').toUpperCase();
+  if (!state.form.identityConsent) return setToast('error', '请先勾选说明', '请阅读并同意《个人信息收集说明》');
   if (!/^[^\d\s]+$/.test(name)) return setToast('error', '姓名格式不正确', '姓名不能包含数字或空格');
   if (!/^[0-9A-Z]{18}$/.test(idNumber)) return setToast('error', '身份证号格式不正确', '请输入 18 位数字或字母');
-  state.form = { name, idNumber, identityResult: 'pending' };
+  state.form = { name, idNumber, identityResult: 'pending', identityConsent: true };
   state.sheet = 'identityCheck';
   render();
 }
@@ -215,15 +229,15 @@ function finishIdentityCheck(result) {
     return;
   }
   state.creator.verified = false;
-  state.creator.isMinor = result === 'minor';
-  state.creator.idStatus = result === 'minor' ? 'minor' : 'invalid';
+  state.creator.isMinor = false;
+  state.creator.idStatus = 'unverified';
   state.form.identityResult = result;
   render();
 }
 
 function backToIdentityEdit() {
   state.sheet = 'identity';
-  state.form = { name: state.form.name || '', idNumber: state.form.idNumber || '', identityEditing: true };
+  state.form = { name: state.form.name || '', idNumber: state.form.idNumber || '', identityEditing: true, identityConsent: Boolean(state.form.identityConsent) };
   render();
 }
 
@@ -270,7 +284,7 @@ function resetIdentityFromBank() {
   state.onboardingActive = true;
   state.onboardingQueue = ['bank'];
   state.sheet = 'identity';
-  state.form = { name: '', idNumber: '', identityEditing: true };
+  state.form = { name: '', idNumber: '', identityEditing: true, identityConsent: false };
   render();
 }
 
@@ -368,33 +382,33 @@ function renderDataWithContest() {
     const item = metrics.works[work.id] || { plays: 0, likes: 0, shares: 0, comments: 0, complete: 0, income: 0 };
     const interaction = item.plays ? ((item.likes + item.shares + item.comments) / item.plays * 100).toFixed(1) : '0.0';
     const incomeAction = state.range === 'today' ? ' data-action="today-income"' : '';
-    return `<article class="h5-work-card"><header class="h5-work-head"><div class="h5-work-cover ${work.color}">${work.id === 1 ? '✦' : work.id === 2 ? '◐' : '☼'}</div><div class="h5-work-title"><b>${work.title}</b>${work.vip ? '<span class="vip-tag">付费VIP</span>' : ''}</div></header><div class="h5-primary-metrics"><div><strong>${formatCount(item.plays)}</strong><span>播放</span></div><div><strong>${formatCount(item.likes)}</strong><span>点赞</span></div><div><strong>${formatCount(item.comments)}</strong><span>评论</span></div><div><strong>${formatCount(item.shares)}</strong><span>分享</span></div></div><div class="h5-secondary-metrics"><div><span>完播率</span><em>${item.complete}%</em></div><div><span>互动率</span><em>${interaction}%</em></div><div${incomeAction}><span>预估收益</span><em>${estimatedIncome(item.income)}</em></div><div><span>观看时长</span><em>${watchHours(item.watchHours || item.plays / 50)}</em></div></div></article>`;
+    return `<article class="h5-work-card"><header class="h5-work-head"><div class="h5-work-cover ${work.color}">${work.id === 1 ? '✦' : work.id === 2 ? '◐' : '☼'}</div><div class="h5-work-title"><b>${work.title}</b>${work.vip ? '<span class="vip-tag">付费VIP</span>' : ''}</div></header><div class="h5-primary-metrics"><div><strong>${formatCount(item.plays)}</strong><span>播放</span></div><div><strong>${formatCount(item.likes)}</strong><span>点赞</span></div><div><strong>${formatCount(item.comments)}</strong><span>评论</span></div><div><strong>${formatCount(item.shares)}</strong><span>分享</span></div></div><div class="h5-secondary-metrics"><div><span>完播率</span><em>${item.complete}%</em></div><div><span>互动率</span><em>${interaction}%</em></div><div><span>付费观看时长</span><em>${watchHours(item.watchHours || item.plays / 50)}</em></div><div${incomeAction}><span>预估收益</span><em>${estimatedIncome(item.income)}</em></div></div></article>`;
   }).join('');
   const incomeAction = state.range === 'today' ? ' data-action="today-income"' : '';
-  return `${topbar('数据中心', '<small>更新于 8/31 17:30</small>')}<main class="h5-main"><section class="h5-contest"><div class="h5-contest-top"><div class="h5-contest-identity"><b>${esc(state.creator.name)}</b><span>小学组 · 科学</span></div><a class="h5-contest-link" href="#" data-action="ranking">大赛排名　›</a></div><div class="h5-contest-ranks"><div><small>赛道排名</small><strong>第 18 <em>名</em></strong></div><div><small>全局排名</small><strong>第 126 <em>名</em></strong></div></div></section><section class="h5-panel"><div class="h5-panel-head h5-panel-head-stack"><div class="h5-panel-title-row"><b>作品数据</b><span>${metrics.label}</span></div><div class="h5-presets h5-presets-scroll">${[['today','今日'],['yesterday','昨日'],['7d','7天'],['30d','30天'],['custom','自定义']].map(([key,label]) => `<button class="${state.range === key ? 'active' : ''}" data-action="set-range" data-range="${key}">${label}</button>`).join('')}</div>${state.range === 'custom' ? `<div class="h5-custom-range"><label>开始日期<input type="date" value="${state.customStart}" data-date-field="customStart" max="${state.customEnd}" /></label><label>结束日期<input type="date" value="${state.customEnd}" data-date-field="customEnd" min="${state.customStart}" max="2026-08-31" /></label></div>` : ''}</div><div class="h5-primary-metrics"><div><strong>${formatCount(overall.plays)}</strong><span>播放</span></div><div><strong>${formatCount(overall.likes)}</strong><span>点赞</span></div><div><strong>${formatCount(overall.comments)}</strong><span>评论</span></div><div><strong>${formatCount(overall.shares)}</strong><span>分享</span></div></div><div class="h5-secondary-metrics"><div><span>完播率</span><em>${overall.complete}%</em></div><div><span>互动率</span><em>${((overall.likes + overall.shares + overall.comments) / overall.plays * 100).toFixed(1)}%</em></div><div${incomeAction}><span>预估收益</span><em>${estimatedIncome(overall.income)}</em></div><div><span>观看时长</span><em>${watchHours(overall.watchHours || overall.plays / 50)}</em></div></div></section><section class="h5-panel"><div class="h5-panel-head"><b>数据趋势</b><div class="h5-presets"><button class="${state.trend === 'plays' ? 'active' : ''}" data-action="set-trend" data-trend="plays">播放</button><button class="${state.trend === 'income' ? 'active' : ''}" data-action="set-trend" data-trend="income">分成</button></div></div><p class="h5-trend-meta">${metrics.label} · ${state.trend === 'plays' ? '每日播放量' : '每日分成收入'}</p><div class="h5-chart-wrap">${chartSvg()}</div></section><section class="h5-panel"><div class="h5-panel-head"><b>单作品数据</b><span>${works.length} 个作品 · ${metrics.label}</span></div><div class="h5-work-list">${workCards}</div></section></main>${bottomNav()}`;
+  return `${topbar('数据中心', '<small>更新于 8/31 17:30</small>')}<main class="h5-main"><section class="h5-contest"><div class="h5-contest-top"><div class="h5-contest-identity"><b>${esc(state.creator.name)}</b><span>小学组 · 科学</span></div><a class="h5-contest-link" href="#" data-action="ranking">大赛排名　›</a></div><div class="h5-contest-ranks"><div><small>赛道排名</small><strong>第 18 <em>名</em></strong></div><div><small>全局排名</small><strong>第 126 <em>名</em></strong></div></div></section><section class="h5-panel"><div class="h5-panel-head h5-panel-head-stack"><div class="h5-panel-title-row"><b>作品数据</b><span>${metrics.label}</span></div><div class="h5-presets h5-presets-scroll">${[['today','今日'],['yesterday','昨日'],['7d','7天'],['30d','30天'],['custom','自定义']].map(([key,label]) => `<button class="${state.range === key ? 'active' : ''}" data-action="set-range" data-range="${key}">${label}</button>`).join('')}</div>${state.range === 'custom' ? `<div class="h5-custom-range"><label>开始日期<input type="date" value="${state.customStart}" data-date-field="customStart" max="${state.customEnd}" /></label><label>结束日期<input type="date" value="${state.customEnd}" data-date-field="customEnd" min="${state.customStart}" max="2026-08-31" /></label></div>` : ''}</div><div class="h5-primary-metrics"><div><strong>${formatCount(overall.plays)}</strong><span>播放</span></div><div><strong>${formatCount(overall.likes)}</strong><span>点赞</span></div><div><strong>${formatCount(overall.comments)}</strong><span>评论</span></div><div><strong>${formatCount(overall.shares)}</strong><span>分享</span></div></div><div class="h5-secondary-metrics"><div><span>完播率</span><em>${overall.complete}%</em></div><div><span>互动率</span><em>${((overall.likes + overall.shares + overall.comments) / overall.plays * 100).toFixed(1)}%</em></div><div><span>付费观看时长</span><em>${watchHours(overall.watchHours || overall.plays / 50)}</em></div><div${incomeAction}><span>预估收益</span><em>${estimatedIncome(overall.income)}</em></div></div></section><section class="h5-panel"><div class="h5-panel-head"><b>数据趋势</b><div class="h5-presets"><button class="${state.trend === 'plays' ? 'active' : ''}" data-action="set-trend" data-trend="plays">播放</button><button class="${state.trend === 'income' ? 'active' : ''}" data-action="set-trend" data-trend="income">收益</button></div></div><p class="h5-trend-meta">${metrics.label} · ${state.trend === 'plays' ? '每日播放量' : '每日收益'}</p><div class="h5-chart-wrap">${chartSvg()}</div></section><section class="h5-panel"><div class="h5-panel-head"><b>单作品数据</b><span>${works.length} 个作品 · ${metrics.label}</span></div><div class="h5-work-list">${workCards}</div></section></main>${bottomNav()}`;
 }
 
 function renderData() {
   const notice = state.creator.contractStatus === 'pending' ? '<div class="notice-card contract-notice"><strong>创作者签约待完成</strong>已向您的登录手机号发送创作者签约短信，请及时查看并在30日内完成电子签约，未及时签约将影响收入分成。</div>' : '';
-  return renderDataWithContest().replace(/<section class="h5-contest">[\s\S]*?<\/section><section class="h5-panel">/, '<section class="h5-panel">').replace('<main class="h5-main">', `<main class="h5-main">${notice}`);
+  return renderDataWithContest().replace(/<section class="h5-contest">[\s\S]*?<\/section><section class="h5-panel">/, '<section class="h5-panel">').replace('<main class="h5-main">', `<main class="h5-main">${notice}`).replace(/<div><span>付费观看时长<\/span><em>.*?<\/em><\/div>/, '');
 }
 
 function renderSettings() {
-  const bankValue = state.creator.bank ? `${state.creator.bank.bankName} · 尾号 ${state.creator.bank.last4}` : '未绑定';
-  const identityValue = state.creator.identity ? `${maskIdentityName(state.creator.identity.name)} ${maskIdentityNumber(state.creator.identity.idNumber)}` : idStatusLabel();
+  const bankValue = state.creator.bank ? '已绑定' : '未绑定';
+  const identityValue = state.creator.verified && state.creator.identity ? `${maskIdentityName(state.creator.identity.name)} ${maskIdentityNumber(state.creator.identity.idNumber)}` : idStatusLabel();
   return `${topbar('账号设置', '<button class="topbar-action" data-action="logout">退出</button>')}<main class="h5-main"><section class="profile-card"><div class="profile-avatar">${esc(state.creator.name.slice(0, 1))}</div><div><strong>${esc(state.creator.name)}</strong><small>${formatPhone(state.creator.phone)} · 创作者账号</small></div></section><section class="earnings-card"><div class="earnings-top"><span>分成收益</span><button class="earnings-link" data-action="open-earnings-rules">创作者激励　›</button></div><div class="earnings-value">${rmbFixed(state.earnings.gross)}</div><div class="earnings-estimate">预估税后+${rmbFixed(state.earnings.estimatedAfterTax)}</div><div class="earnings-foot"><span>结算中${rmbFixed(state.earnings.settling)}</span><button data-action="open-earnings-history">历史收益</button></div></section><section class="settings-group"><div class="settings-label">账号资料</div><div class="h5-list"><button class="setting-row" data-action="edit-nickname"><span class="row-left"><span class="row-icon">✎</span><span class="row-title">昵称</span></span><span class="row-value">${esc(state.creator.name)} <span class="chevron">›</span></span></button><button class="setting-row" data-action="edit-phone"><span class="row-left"><span class="row-icon">☎</span><span class="row-title">绑定手机号</span></span><span class="row-value">${formatPhone(state.creator.phone)} <span class="chevron">›</span></span></button></div></section><section class="settings-group"><div class="settings-label">身份与收款</div><div class="h5-list"><button class="setting-row" data-action="open-identity"><span class="row-left"><span class="row-icon">✓</span><span class="row-title">实名认证</span></span><span class="row-value"><span class="inline-status ${state.creator.verified ? 'success' : state.creator.isMinor ? 'danger' : 'warning'}">${idStatusLabel()}</span><span class="chevron">›</span></span></button><button class="setting-row" data-action="edit-bank"><span class="row-left"><span class="row-icon">¥</span><span class="row-title">绑定银行卡</span></span><span class="row-value">${esc(bankValue)} <span class="chevron">›</span></span></button></div></section><section class="settings-group"><div class="settings-label">安全与协议</div><div class="h5-list"><button class="setting-row" data-action="open-agreement"><span class="row-left"><span class="row-icon">§</span><span class="row-title">创作者版权协议</span></span><span class="row-value">已同意 <span class="chevron">›</span></span></button><button class="setting-row" data-action="logout"><span class="row-left"><span class="row-icon">↪</span><span class="row-title">退出登录</span></span><span class="chevron">›</span></button></div></section></main>${bottomNav()}`;
 }
 
 function renderSettingsV2() {
-  const bankValue = state.creator.bank ? `${state.creator.bank.bankName} · ${state.creator.bank.branchName} · 尾号 ${state.creator.bank.last4} · 点击修改` : '未绑定';
-  const identityValue = state.creator.identity ? `${maskIdentityName(state.creator.identity.name)} ${maskIdentityNumber(state.creator.identity.idNumber)} · 点击查看` : idStatusLabel();
-  const contractNotice = state.creator.platformRegistered ? '<div class="notice-card contract-notice"><strong>兼职平台注册成功</strong>已向登录手机号发送创作者签约短信，请及时查看并在30日内完成电子签约，未及时签约将影响收入分成。</div>' : '<div class="notice-card"><strong>暂未完成结算平台注册</strong>完成实名认证和银行卡绑定后，才能进入结算打款流程。</div>';
+  const bankValue = state.creator.bank ? '已绑定' : '未绑定';
+  const identityValue = state.creator.verified && state.creator.identity ? `${maskIdentityName(state.creator.identity.name)} ${maskIdentityNumber(state.creator.identity.idNumber)} · 点击查看` : idStatusLabel();
+  const contractNotice = state.creator.platformRegistered ? '<div class="notice-card contract-notice"><strong>重要提醒！</strong>已向登录手机号发送创作者签约短信，请及时查看并在30日内完成电子签约，未及时签约将影响收入分成。</div>' : '';
   return `${topbar('账号设置', '<button class="topbar-action" data-action="logout">退出</button>')}<main class="h5-main"><section class="profile-card"><div class="profile-avatar">${esc(state.creator.name.slice(0, 1))}</div><div><strong>${esc(state.creator.name)}</strong><small>${formatPhone(state.creator.phone)} · 已关联天天学 App</small></div></section>${contractNotice}<section class="earnings-card"><div class="earnings-top"><span>分成收益</span><button class="earnings-link" data-action="open-earnings-rules">创作者激励　›</button></div><div class="earnings-value">${rmbFixed(state.earnings.gross)}</div><div class="earnings-estimate">预估税后+${rmbFixed(state.earnings.estimatedAfterTax)}</div><div class="earnings-foot"><span>结算中${rmbFixed(state.earnings.settling)}</span><button data-action="open-earnings-history">历史收益</button></div></section><section class="settings-group"><div class="settings-label">账号资料</div><div class="h5-list"><button class="setting-row" data-action="edit-nickname"><span class="row-left"><span class="row-icon">✎</span><span class="row-title">昵称</span></span><span class="row-value">${esc(state.creator.name)} <span class="chevron">›</span></span></button><button class="setting-row" data-action="edit-phone"><span class="row-left"><span class="row-icon">☎</span><span class="row-title">绑定手机号</span></span><span class="row-value">${formatPhone(state.creator.phone)} <span class="chevron">›</span></span></button></div></section><section class="settings-group"><div class="settings-label">身份与收款</div><div class="h5-list"><button class="setting-row" data-action="open-identity"><span class="row-left"><span class="row-icon">✓</span><span class="row-title">实名认证</span></span><span class="row-value"><span class="inline-status ${state.creator.verified ? 'success' : state.creator.isMinor ? 'danger' : 'warning'}">${esc(identityValue)}</span><span class="chevron">›</span></span></button><button class="setting-row" data-action="edit-bank"><span class="row-left"><span class="row-icon">¥</span><span class="row-title">绑定银行卡</span></span><span class="row-value">${esc(bankValue)} <span class="chevron">›</span></span></button></div></section><section class="settings-group"><div class="settings-label">安全与协议</div><div class="h5-list"><button class="setting-row" data-action="open-agreement"><span class="row-left"><span class="row-icon">§</span><span class="row-title">创作者版权协议</span></span><span class="row-value">已同意 <span class="chevron">›</span></span></button><button class="setting-row" data-action="open-privacy"><span class="row-left"><span class="row-icon">i</span><span class="row-title">用户隐私声明xxx</span></span><span class="chevron">›</span></button><button class="setting-row" data-action="logout"><span class="row-left"><span class="row-icon">↪</span><span class="row-title">退出登录</span></span><span class="chevron">›</span></button></div></section></main>${bottomNav()}`;
 }
 
 function renderSettingsEarningsCard() {
   const locked = !state.creator.verified || state.creator.isMinor || !state.creator.bank || !state.creator.platformRegistered;
-  if (locked) return `<section class="earnings-card earnings-locked" data-action="open-onboarding"><div class="earnings-top"><span>分成收益</span><span class="earnings-lock-icon">🔒</span></div><div class="earnings-locked-title">完成信息收集后解锁收益</div><div class="earnings-locked-desc">请完成实名认证、银行卡绑定和创作者注册</div><div class="earnings-foot"><span>当前无法结算打款</span><span class="earnings-locked-link">点击继续 ›</span></div></section>`;
+  if (locked) return `<section class="earnings-card earnings-locked" data-action="open-onboarding"><div class="earnings-top"><span>分成收益</span><span class="earnings-lock-icon">🔒</span></div><div class="earnings-locked-title">完成认证解锁收益分成</div><div class="earnings-foot"><span>当前无法结算打款</span><span class="earnings-locked-link">点击继续 ›</span></div></section>`;
   return `<section class="earnings-card"><div class="earnings-top"><span>分成收益</span><button class="earnings-link" data-action="open-earnings-rules">创作者激励　›</button></div><div class="earnings-value">${rmbFixed(state.earnings.gross)}</div><div class="earnings-estimate">预估税后+${rmbFixed(state.earnings.estimatedAfterTax)}</div><div class="earnings-foot"><span>结算中${rmbFixed(state.earnings.settling)}</span><button data-action="open-earnings-history">历史收益</button></div></section>`;
 }
 
@@ -441,16 +455,16 @@ function renderSheet() {
 }
 
 function sheetHead(title, subtitle = '') { return `<div class="sheet-head"><div><h3>${title}</h3>${subtitle ? `<p>${subtitle}</p>` : ''}</div><button class="sheet-close" data-action="close-sheet">×</button></div>`; }
-function renderAgreementSheet() { return `${sheetHead('创作者版权协议', '登录前请阅读并确认') }<div class="sheet-note" style="background:#fff">一、创作者保证上传、发布及参与激励的内容拥有合法、完整、有效的著作权或已取得必要授权。<br/><br/>二、创作者不得上传侵犯他人知识产权、肖像权、隐私权或其他合法权益的内容。<br/><br/>三、平台有权对内容进行审核，并对违规内容采取下架、限流、取消激励或终止合作等措施。<br/><br/>四、创作者应配合平台进行实名、未成年人保护和收益结算相关的合规核验。</div><div class="sheet-actions"><button class="primary-btn" data-action="close-sheet">返回登录</button></div>`; }
-function renderPrivacySheet() { return `${sheetHead('用户隐私声明xxx', '登录前请阅读并确认')}<div class="sheet-note" style="background:#fff">平台将基于手机号验证码关联天天学 App 账号，并在获得授权后读取 App 名称。实名认证、银行卡和收益结算信息仅用于作品分发、收益结算及合规校验。</div><div class="sheet-actions"><button class="primary-btn" data-action="close-sheet">返回登录</button></div>`; }
+function renderAgreementSheet() { return `${sheetHead('创作者版权协议')}<div class="sheet-note" style="background:#fff">一、创作者保证上传、发布及参与激励的内容拥有合法、完整、有效的著作权或已取得必要授权。<br/><br/>二、创作者不得上传侵犯他人知识产权、肖像权、隐私权或其他合法权益的内容。<br/><br/>三、平台有权对内容进行审核，并对违规内容采取下架、限流、取消激励或终止合作等措施。<br/><br/>四、创作者应配合平台进行实名、未成年人保护和收益结算相关的合规核验。</div><div class="sheet-actions"><button class="primary-btn" data-action="close-sheet">返回登录</button></div>`; }
+function renderPrivacySheet() { return `${sheetHead('用户隐私声明xxx')}<div class="sheet-note" style="background:#fff">平台将基于手机号验证码关联天天学 App 账号，并在获得授权后读取 App 名称。实名认证、银行卡和收益结算信息仅用于作品分发、收益结算及合规校验。</div><div class="sheet-actions"><button class="primary-btn" data-action="close-sheet">返回登录</button></div>`; }
 function renderEarningsRulesSheet() { return `${sheetHead('收益核算规则', '创作者激励收益的计算与结算说明')}<div class="detail-lines"><div class="detail-line"><span>收益来源</span><span>会员拉新分成、付费视频播放分成等</span></div><div class="detail-line"><span>统计周期</span><span>上月 25 日至本月 24 日</span></div><div class="detail-line"><span>数据更新时间</span><span>次日 10:00 更新前一日收益</span></div><div class="detail-line"><span>收益回退</span><span>订单退费、视频下架等情况，收益自动回退</span></div><div class="detail-line"><span>结算打款</span><span>公民需合法纳税，系统将在次月 15 日前将税后收入打款至绑定银行卡。</span></div></div><div class="sheet-note" style="margin-top:15px">分成收益以平台最终结算账单为准，税前收益和税后实际打款金额会在历史收益中分别展示。</div><div class="sheet-actions"><button class="primary-btn blue" data-action="close-sheet">我知道了</button></div>`; }
 function renderEarningsHistorySheet() {
   const records = [
-    { date: '2026-08-31', updatedAt: '2026-09-01', title: '2026 年 08 月内容分成', status: 'settling', statusText: '结算中', beforeTax: 962.00, afterTax: 859.88 },
-    { date: '2026-07-31', updatedAt: '2026-08-01', title: '2026 年 07 月内容分成', status: 'paid', statusText: '已打款', beforeTax: 738.00, afterTax: 660.12 },
-    { date: '2026-06-30', updatedAt: '2026-07-01', title: '2026 年 06 月内容分成', status: 'exception', statusText: '状态异常，请联系运营沟通', beforeTax: 816.50, afterTax: 730.80 },
-    { date: '2026-05-31', updatedAt: '2026-06-01', title: '2026 年 05 月内容分成', status: 'paid', statusText: '已打款', beforeTax: 684.00, afterTax: 611.20 },
-    { date: '2026-03-31', updatedAt: '2026-04-01', title: '2026 年 03 月内容分成', status: 'paid', statusText: '已打款', beforeTax: 612.00, afterTax: 546.12 }
+    { date: '2026-08-31', updatedAt: '2026-09-01', title: '2026 年 08 月内容分成', status: 'settling', statusText: '结算中', beforeTax: 962.00 },
+    { date: '2026-07-31', updatedAt: '2026-08-01', title: '2026 年 07 月内容分成', status: 'paid', statusText: '已打款', beforeTax: 738.00 },
+    { date: '2026-06-30', updatedAt: '2026-07-01', title: '2026 年 06 月内容分成', status: 'exception', statusText: '打款异常', beforeTax: 816.50 },
+    { date: '2026-05-31', updatedAt: '2026-06-01', title: '2026 年 05 月内容分成', status: 'paid', statusText: '已打款', beforeTax: 684.00 },
+    { date: '2026-03-31', updatedAt: '2026-04-01', title: '2026 年 03 月内容分成', status: 'paid', statusText: '已打款', beforeTax: 612.00 }
   ];
   const rmb = (value) => `￥${Number(value).toFixed(2)}`;
   const today = new Date('2026-10-19T00:00:00');
@@ -459,16 +473,18 @@ function renderEarningsHistorySheet() {
   const visibleRecords = records.filter((record) => { const date = new Date(`${record.date}T12:00:00`); return date >= rangeStart && date <= rangeEnd; });
   const filters = [['6m', '近半年'], ['1y', '近一年'], ['custom', '自定义']].map(([key, label]) => `<button class="${state.historyRange === key ? 'active' : ''}" data-action="set-history-range" data-history-range="${key}">${label}</button>`).join('');
   const rangePicker = state.historyRange === 'custom' ? `<div class="h5-custom-range"><label>开始日期<input type="date" value="${state.historyStart}" data-history-date="historyStart" max="${state.historyEnd}" /></label><label>结束日期<input type="date" value="${state.historyEnd}" data-history-date="historyEnd" min="${state.historyStart}" max="2026-10-19" /></label></div>` : '';
-  const list = visibleRecords.length ? visibleRecords.map((record) => `<div class="settlement-row"><div class="settlement-head"><span class="row-left"><span class="row-icon">¥</span><span><span class="row-title">${record.title}</span><small class="row-sub">更新时间 ${record.updatedAt}</small></span></span><span class="settlement-status ${record.status}">${record.statusText}</span></div><div class="settlement-amounts"><span>税前收益 ${rmb(record.beforeTax)}</span><strong>税后+${rmb(record.afterTax)}</strong></div></div>`).join('') : '<div class="empty-card">当前时间范围内暂无月分成结算记录</div>';
-  return `${sheetHead('历史收益', '查看已发起结算及完成打款的月分成')}<div class="history-filter"><div class="h5-presets">${filters}</div>${rangePicker}</div><div class="settlement-list">${list}</div><div class="sheet-note" style="margin-top:15px">税前收益为原始结算金额，税后+金额为实际打款金额。异常状态请联系运营沟通。</div>`;
+  const list = visibleRecords.length ? visibleRecords.map((record) => `<div class="settlement-row"><div class="settlement-head"><span class="row-left"><span class="row-icon">¥</span><span><span class="row-title">${record.title}</span><small class="row-sub">更新时间 ${record.updatedAt}</small></span></span><span class="settlement-status ${record.status}">${record.statusText}</span></div><div class="settlement-amounts"><span>税前收益 ${rmb(record.beforeTax)}</span></div></div>`).join('') : '<div class="empty-card">当前时间范围内暂无月分成结算记录</div>';
+  return `${sheetHead('历史收益', '结算周期为上月20日至本月19日产生的收益。当前页面仅展示结算的税前收益，实际收入以到账金额为准')}<div class="history-filter"><div class="h5-presets">${filters}</div>${rangePicker}</div><div class="settlement-list">${list}</div>`;
 }
 function renderNicknameSheet() { return `${sheetHead('修改昵称', '昵称会展示在创作者数据中心和个人主页')}<div class="field"><label class="field-label">新昵称</label><input class="field-control" maxlength="20" value="${esc(state.form.nickname || state.creator.name)}" data-sheet-field="nickname" /></div><div class="sheet-actions"><button class="primary-btn blue" data-action="save-nickname">保存昵称</button></div>`; }
 function renderPhoneSheet() { return `${sheetHead('修改绑定手机号', '更换手机号需要完成验证码校验')}<div class="field"><label class="field-label">新手机号</label><input class="field-control" inputmode="numeric" maxlength="11" placeholder="请输入新手机号" value="${esc(state.form.newPhone || '')}" data-sheet-field="newPhone" /></div><div class="field"><label class="field-label">验证码</label><div class="code-row"><input class="field-control" inputmode="numeric" maxlength="6" placeholder="请输入验证码" value="${esc(state.form.code || '')}" data-sheet-field="code" /><button class="code-button" data-action="sheet-code">获取验证码</button></div></div><div class="sheet-actions"><button class="primary-btn blue" data-action="save-phone">确认更换</button></div>`; }
 function renderIdentitySheet() {
   const saved = state.creator.identity;
   const editing = state.form.identityEditing || !saved;
-  const savedSummary = saved && !editing ? `<div class="identity-mask"><span><b>${maskIdentityName(saved.name)}</b><small>${maskIdentityNumber(saved.idNumber)}</small></span><em>已加密</em></div>` : `<div class="field"><label class="field-label">姓名</label><input class="field-control" maxlength="20" placeholder="请输入真实姓名" value="${esc(state.form.name || '')}" data-sheet-field="name" /></div><div class="field"><label class="field-label">身份证号</label><input class="field-control" maxlength="18" placeholder="请输入 18 位身份证号" value="${esc(state.form.idNumber || '')}" data-sheet-field="idNumber" /></div>`;
-  return `${sheetHead('实名认证', '请完成身份认证，认证信息将用于作品分发、收益提现等')}<div class="sheet-note identity-guide">请完成身份认证，认证信息将用于作品分发、收益提现等。<br/><strong>未成年人需请监护人进行实名认证。</strong></div><div class="detail-lines identity-status"><div class="detail-line"><span>认证状态</span><span>${idStatusLabel()}</span></div><div class="detail-line"><span>证件类型</span><span>境内居民身份证</span></div></div>${savedSummary}<div class="sheet-note">实名认证完成后不可修改，实名信息仅可绑定到一个创作者账号中！</div><div class="sheet-actions"><button class="secondary-btn" data-action="skip-onboarding">暂时跳过</button>${editing ? '<button class="primary-btn blue" data-action="submit-identity">确认并继续</button>' : '<button class="primary-btn blue" data-action="close-sheet">完成</button>'}</div>`;
+  const savedSummary = saved && !editing ? `<div class="identity-mask"><span><b>${maskIdentityName(saved.name)}</b><small>${maskIdentityNumber(saved.idNumber)}</small></span></div>` : `<div class="field"><label class="field-label">姓名</label><input class="field-control" maxlength="20" placeholder="请输入真实姓名" value="${esc(state.form.name || '')}" data-sheet-field="name" /></div><div class="field"><label class="field-label">身份证号</label><input class="field-control" maxlength="18" placeholder="请输入 18 位身份证号" value="${esc(state.form.idNumber || '')}" data-sheet-field="idNumber" /></div>`;
+  const consent = editing ? `<label class="identity-consent"><input type="checkbox" ${state.form.identityConsent ? 'checked' : ''} data-sheet-field="identityConsent" /><span>我已阅读并同意《个人信息收集说明》</span></label>` : '';
+  const actions = editing ? `<button class="secondary-btn" data-action="skip-onboarding">暂时跳过</button><button class="primary-btn blue" data-action="submit-identity" ${state.form.identityConsent ? '' : 'disabled'}>确认绑定</button>` : '<button class="primary-btn blue" data-action="close-sheet">完成</button>';
+  return `${sheetHead('实名认证', '请完成身份认证，认证信息将用于作品分发、收益提现等')}<div class="sheet-note identity-guide">请完成身份认证，认证信息将用于作品分发、收益提现等。<br/><strong>未成年人需请监护人进行实名认证。</strong><br/><strong class="identity-lock-note">实名认证完成后不可修改，实名信息仅可绑定到一个创作者账号中！</strong></div><div class="detail-lines identity-status"><div class="detail-line"><span>证件类型</span><span>境内居民身份证</span></div></div>${savedSummary}${consent}<div class="sheet-actions">${actions}</div>`;
 }
 function renderIdentityCheckSheet() {
   const result = state.form.identityResult;
@@ -477,10 +493,11 @@ function renderIdentityCheckSheet() {
   return `${sheetHead('身份信息校验', '正在校验实名信息')}<div class="sheet-note">姓名：${esc(maskIdentityName(state.form.name))}<br/>身份证号：${esc(maskIdentityNumber(state.form.idNumber))}</div>${resultBlock}`;
 }
 function renderBankSheet() {
+  const bankEditing = Boolean(state.creator.bank);
   const platformError = { identity_invalid: '身份证错误，请检查或更换实名信息', bank_mismatch: '银行卡与实名认证信息不匹配，请更换本人银行卡', employee: '公司规定暂不支持在职员工签约创作者并获取收入，请检查或更换实名信息' }[state.form.platformError] || '';
   const bankOptions = ['中国工商银行', '中国建设银行', '中国银行', '招商银行'].map((bank) => `<option value="${bank}" ${state.form.bankName === bank ? 'selected' : ''}>${bank}</option>`).join('');
   const errorBlock = platformError ? `<div class="sheet-error"><strong>创作者注册失败</strong><span>${platformError}</span>${state.form.platformError === 'employee' ? '<button class="link-btn" data-action="reset-identity-from-bank">返回第一步修改身份证信息</button>' : '<button class="link-btn" data-action="retry-bank">重新绑定银行卡</button>'}</div>` : '';
-  return `${sheetHead('绑定银行卡', '用于创作者收益提现，确认后将联动兼职平台注册')}<div class="sheet-note">请绑定本人银行卡。确认后系统会联动兼职平台完成创作者注册，注册成功后会向登录手机号发送电子签约短信。</div>${errorBlock}<div class="field"><label class="field-label">银行</label><select class="field-control" data-sheet-field="bankName"><option value="">请选择银行</option>${bankOptions}</select></div><div class="field"><label class="field-label">支行</label><input class="field-control" placeholder="请输入开户支行名称" value="${esc(state.form.branchName || '')}" data-sheet-field="branchName" /></div><div class="field"><label class="field-label">银行卡号</label><input class="field-control" inputmode="numeric" maxlength="23" placeholder="请输入银行卡号" value="${esc(state.form.cardNumber || '')}" data-sheet-field="cardNumber" /></div><div class="sheet-note">银行卡号输入会自动去除空格；实名认证信息不可修改，银行卡支持重新绑定。</div><div class="sheet-actions"><button class="secondary-btn" data-action="skip-onboarding">暂时跳过</button><button class="primary-btn blue" data-action="save-bank">确认并注册</button></div><div class="demo-actions"><span>Demo 模拟平台返回：</span><button data-action="simulate-bank-error" data-bank-error="identity_invalid">身份证错误</button><button data-action="simulate-bank-error" data-bank-error="bank_mismatch">不匹配</button><button data-action="simulate-bank-error" data-bank-error="employee">已在职人员</button></div>`;
+  return `${sheetHead(bankEditing ? '修改银行卡' : '绑定银行卡')}<div class="sheet-note">请绑定本人银行卡。注意：默认每月10日发起打款，如打款过程中修改银行卡可能影响实际到账情况</div>${errorBlock}<div class="field"><label class="field-label">银行</label><select class="field-control" data-sheet-field="bankName"><option value="">请选择银行</option>${bankOptions}</select></div><div class="field"><label class="field-label">支行</label><input class="field-control" placeholder="请输入开户支行名称" value="${esc(state.form.branchName || '')}" data-sheet-field="branchName" /></div><div class="field"><label class="field-label">银行卡号</label><input class="field-control" inputmode="numeric" maxlength="23" placeholder="请输入银行卡号" value="${esc(state.form.cardNumber || '')}" data-sheet-field="cardNumber" /></div><div class="sheet-actions"><button class="secondary-btn" data-action="skip-onboarding">${bankEditing ? '取消修改' : '暂时跳过'}</button><button class="primary-btn blue" data-action="save-bank">确认绑定</button></div><div class="demo-actions"><span>Demo 模拟平台返回：</span><button data-action="simulate-bank-error" data-bank-error="bank_mismatch">不匹配</button></div>`;
 }
 function renderWithdrawSheet() { const amount = Number(state.form.amount || 0); const error = state.form.amount ? validateWithdraw(amount) : ''; return `${sheetHead('提交提现', '提现前请确认实名认证和收款银行卡')}<div class="earnings-card"><div class="earnings-top"><span>可提现余额</span><span>${money(state.earnings.available)}</span></div><div class="earnings-value" data-withdraw-preview="amount">${money(amount)}</div><div class="earnings-foot"><span>预计到账</span><span data-withdraw-preview="net">${money(amount)}</span></div></div><div class="field" style="margin-top:16px"><label class="field-label">提现金额</label><input class="field-control" inputmode="decimal" placeholder="最低 ¥10" value="${esc(state.form.amount || '')}" data-sheet-field="amount" /><div class="error-text">${error}</div></div><div class="detail-lines"><div class="detail-line"><span>收款银行卡</span><span>${state.creator.bank ? `${esc(state.creator.bank.bankName)} · 尾号 ${state.creator.bank.last4}` : '未绑定'}</span></div><div class="detail-line"><span>平台服务费</span><span style="color:var(--green)">暂不收取</span></div><div class="detail-line"><span>预计到账时间</span><span>1 个工作日</span></div></div><div class="sheet-actions"><button class="primary-btn blue" data-action="submit-withdraw" ${error || !state.form.amount ? 'disabled' : ''}>确认提现</button></div>`; }
 
@@ -545,11 +562,11 @@ document.addEventListener('click', (event) => {
 
 document.addEventListener('input', (event) => {
   if (event.target.dataset.authField) updateAuthField(event.target.dataset.authField, event.target.type === 'checkbox' ? event.target.checked : event.target.value);
-  if (event.target.dataset.sheetField) { const field = event.target.dataset.sheetField; const value = field === 'cardNumber' ? event.target.value.replace(/\s/g, '') : field === 'idNumber' ? event.target.value.replace(/\s/g, '').toUpperCase() : event.target.value; event.target.value = value; state.form[field] = value; if (state.sheet === 'withdrawal') { const amount = Number(state.form.amount || 0); const error = state.form.amount ? validateWithdraw(amount) : ''; const errorNode = document.querySelector('.error-text'); const submit = document.querySelector('[data-action="submit-withdraw"]'); const amountPreview = document.querySelector('[data-withdraw-preview="amount"]'); const netPreview = document.querySelector('[data-withdraw-preview="net"]'); if (errorNode) errorNode.textContent = error; if (amountPreview) amountPreview.textContent = money(amount); if (netPreview) netPreview.textContent = money(amount); if (submit) submit.disabled = Boolean(error || !state.form.amount); } }
+  if (event.target.dataset.sheetField) { const field = event.target.dataset.sheetField; const value = event.target.type === 'checkbox' ? event.target.checked : field === 'cardNumber' ? event.target.value.replace(/\s/g, '') : field === 'idNumber' ? event.target.value.replace(/\s/g, '').toUpperCase() : event.target.value; if (event.target.type !== 'checkbox') event.target.value = value; state.form[field] = value; if (state.sheet === 'withdrawal') { const amount = Number(state.form.amount || 0); const error = state.form.amount ? validateWithdraw(amount) : ''; const errorNode = document.querySelector('.error-text'); const submit = document.querySelector('[data-action="submit-withdraw"]'); const amountPreview = document.querySelector('[data-withdraw-preview="amount"]'); const netPreview = document.querySelector('[data-withdraw-preview="net"]'); if (errorNode) errorNode.textContent = error; if (amountPreview) amountPreview.textContent = money(amount); if (netPreview) netPreview.textContent = money(amount); if (submit) submit.disabled = Boolean(error || !state.form.amount); } if (state.sheet === 'identity' && field === 'identityConsent') render(); }
 });
 
 document.addEventListener('change', (event) => {
-  if (event.target.dataset.sheetField) state.form[event.target.dataset.sheetField] = event.target.value;
+  if (event.target.dataset.sheetField) state.form[event.target.dataset.sheetField] = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
   if (event.target.dataset.dateField) { state[event.target.dataset.dateField] = event.target.value; render(); }
   if (event.target.dataset.historyDate) { state[event.target.dataset.historyDate] = event.target.value; render(); }
 });
