@@ -1,9 +1,9 @@
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 const works = [
-  { id: 1, title: '为什么鸟能飞起来？', reviewStatus: '审核通过', status: '已上架', color: 'orange' },
-  { id: 2, title: '为什么月亮有时候圆有时候不圆？', reviewStatus: '审核中', status: '已上架', color: 'blue' },
-  { id: 3, title: '为什么天空是蓝色的？', reviewStatus: '审核失败', status: '已下架', color: 'green' }
+  { id: 1, title: '为什么鸟能飞起来？', reviewStatus: '审核通过', status: '已上架', color: 'orange', vip: false },
+  { id: 2, title: '为什么月亮有时候圆有时候不圆？', reviewStatus: '审核中', status: '已上架', color: 'blue', vip: true },
+  { id: 3, title: '为什么天空是蓝色的？', reviewStatus: '审核失败', status: '已下架', color: 'green', vip: true }
 ];
 
 const metricData = {
@@ -17,6 +17,9 @@ const trendData = {
   '30d': [{ day: '8/02', plays: 4200, income: 42 }, { day: '8/06', plays: 5580, income: 62 }, { day: '8/10', plays: 6820, income: 78 }, { day: '8/14', plays: 7020, income: 80 }, { day: '8/18', plays: 8460, income: 102 }, { day: '8/22', plays: 9740, income: 126 }, { day: '8/26', plays: 10340, income: 136 }, { day: '8/31', plays: 9980, income: 150 }],
   yesterday: [{ day: '8/31', plays: 9980, income: 150 }]
 };
+
+metricData.today = { label: '今日', overall: { plays: 3260, likes: 198, comments: 31, shares: 46, complete: 89.8, income: 0 }, works: { 1: { plays: 1420, likes: 92, shares: 18, comments: 14, complete: 91.2, income: 0 }, 2: { plays: 1060, likes: 64, shares: 17, comments: 10, complete: 87.1, income: 0 }, 3: { plays: 780, likes: 42, shares: 11, comments: 7, complete: 89.4, income: 0 } } };
+trendData.today = [{ day: '今日', plays: 3260, income: 0 }];
 
 const initialState = {
   authenticated: false,
@@ -65,6 +68,14 @@ function statusTag(status) {
 function formatCount(value) {
   if (value >= 10000) return `${(value / 10000).toFixed(value >= 100000 ? 0 : 1)}万`;
   return numberText(value);
+}
+
+function watchHours(value) {
+  return `${Number(value || 0).toFixed(2)}h`;
+}
+
+function estimatedIncome(value) {
+  return state.range === 'today' ? '--' : money(value);
 }
 
 function setToast(type, title, message) {
@@ -356,9 +367,11 @@ function renderDataWithContest() {
   const workCards = works.map((work) => {
     const item = metrics.works[work.id] || { plays: 0, likes: 0, shares: 0, comments: 0, complete: 0, income: 0 };
     const interaction = item.plays ? ((item.likes + item.shares + item.comments) / item.plays * 100).toFixed(1) : '0.0';
-    return `<article class="h5-work-card"><header class="h5-work-head"><div class="h5-work-cover ${work.color}">${work.id === 1 ? '✦' : work.id === 2 ? '◐' : '☼'}</div><b>${work.title}</b></header><div class="h5-primary-metrics"><div><strong>${formatCount(item.plays)}</strong><span>播放</span></div><div><strong>${formatCount(item.likes)}</strong><span>点赞</span></div><div><strong>${formatCount(item.comments)}</strong><span>评论</span></div><div><strong>${formatCount(item.shares)}</strong><span>分享</span></div></div><div class="h5-secondary-metrics"><div><span>完播率</span><em>${item.complete}%</em></div><div><span>互动率</span><em>${interaction}%</em></div><div><span>分成收入</span><em>${item.income ? money(item.income) : '—'}</em></div></div></article>`;
+    const incomeAction = state.range === 'today' ? ' data-action="today-income"' : '';
+    return `<article class="h5-work-card"><header class="h5-work-head"><div class="h5-work-cover ${work.color}">${work.id === 1 ? '✦' : work.id === 2 ? '◐' : '☼'}</div><div class="h5-work-title"><b>${work.title}</b>${work.vip ? '<span class="vip-tag">付费VIP</span>' : ''}</div></header><div class="h5-primary-metrics"><div><strong>${formatCount(item.plays)}</strong><span>播放</span></div><div><strong>${formatCount(item.likes)}</strong><span>点赞</span></div><div><strong>${formatCount(item.comments)}</strong><span>评论</span></div><div><strong>${formatCount(item.shares)}</strong><span>分享</span></div></div><div class="h5-secondary-metrics"><div><span>完播率</span><em>${item.complete}%</em></div><div><span>互动率</span><em>${interaction}%</em></div><div${incomeAction}><span>预估收益</span><em>${estimatedIncome(item.income)}</em></div><div><span>观看时长</span><em>${watchHours(item.watchHours || item.plays / 50)}</em></div></div></article>`;
   }).join('');
-  return `${topbar('数据中心', '<small>更新于 8/31 17:30</small>')}<main class="h5-main"><section class="h5-contest"><div class="h5-contest-top"><div class="h5-contest-identity"><b>${esc(state.creator.name)}</b><span>小学组 · 科学</span></div><a class="h5-contest-link" href="#" data-action="ranking">大赛排名　›</a></div><div class="h5-contest-ranks"><div><small>赛道排名</small><strong>第 18 <em>名</em></strong></div><div><small>全局排名</small><strong>第 126 <em>名</em></strong></div></div></section><section class="h5-panel"><div class="h5-panel-head h5-panel-head-stack"><div class="h5-panel-title-row"><b>作品数据</b><span>${metrics.label}</span></div><div class="h5-presets h5-presets-scroll">${[['yesterday','昨日'],['7d','7天'],['30d','30天'],['custom','自定义']].map(([key,label]) => `<button class="${state.range === key ? 'active' : ''}" data-action="set-range" data-range="${key}">${label}</button>`).join('')}</div>${state.range === 'custom' ? `<div class="h5-custom-range"><label>开始日期<input type="date" value="${state.customStart}" data-date-field="customStart" max="${state.customEnd}" /></label><label>结束日期<input type="date" value="${state.customEnd}" data-date-field="customEnd" min="${state.customStart}" max="2026-08-31" /></label></div>` : ''}</div><div class="h5-primary-metrics"><div><strong>${formatCount(overall.plays)}</strong><span>播放</span></div><div><strong>${formatCount(overall.likes)}</strong><span>点赞</span></div><div><strong>${formatCount(overall.comments)}</strong><span>评论</span></div><div><strong>${formatCount(overall.shares)}</strong><span>分享</span></div></div><div class="h5-secondary-metrics"><div><span>完播率</span><em>${overall.complete}%</em></div><div><span>互动率</span><em>${((overall.likes + overall.shares + overall.comments) / overall.plays * 100).toFixed(1)}%</em></div><div><span>分成收入</span><em>${money(overall.income)}</em></div></div></section><section class="h5-panel"><div class="h5-panel-head"><b>数据趋势</b><div class="h5-presets"><button class="${state.trend === 'plays' ? 'active' : ''}" data-action="set-trend" data-trend="plays">播放</button><button class="${state.trend === 'income' ? 'active' : ''}" data-action="set-trend" data-trend="income">分成</button></div></div><p class="h5-trend-meta">${metrics.label} · ${state.trend === 'plays' ? '每日播放量' : '每日分成收入'}</p><div class="h5-chart-wrap">${chartSvg()}</div></section><section class="h5-panel"><div class="h5-panel-head"><b>单作品数据</b><span>${works.length} 个作品 · ${metrics.label}</span></div><div class="h5-work-list">${workCards}</div></section></main>${bottomNav()}`;
+  const incomeAction = state.range === 'today' ? ' data-action="today-income"' : '';
+  return `${topbar('数据中心', '<small>更新于 8/31 17:30</small>')}<main class="h5-main"><section class="h5-contest"><div class="h5-contest-top"><div class="h5-contest-identity"><b>${esc(state.creator.name)}</b><span>小学组 · 科学</span></div><a class="h5-contest-link" href="#" data-action="ranking">大赛排名　›</a></div><div class="h5-contest-ranks"><div><small>赛道排名</small><strong>第 18 <em>名</em></strong></div><div><small>全局排名</small><strong>第 126 <em>名</em></strong></div></div></section><section class="h5-panel"><div class="h5-panel-head h5-panel-head-stack"><div class="h5-panel-title-row"><b>作品数据</b><span>${metrics.label}</span></div><div class="h5-presets h5-presets-scroll">${[['today','今日'],['yesterday','昨日'],['7d','7天'],['30d','30天'],['custom','自定义']].map(([key,label]) => `<button class="${state.range === key ? 'active' : ''}" data-action="set-range" data-range="${key}">${label}</button>`).join('')}</div>${state.range === 'custom' ? `<div class="h5-custom-range"><label>开始日期<input type="date" value="${state.customStart}" data-date-field="customStart" max="${state.customEnd}" /></label><label>结束日期<input type="date" value="${state.customEnd}" data-date-field="customEnd" min="${state.customStart}" max="2026-08-31" /></label></div>` : ''}</div><div class="h5-primary-metrics"><div><strong>${formatCount(overall.plays)}</strong><span>播放</span></div><div><strong>${formatCount(overall.likes)}</strong><span>点赞</span></div><div><strong>${formatCount(overall.comments)}</strong><span>评论</span></div><div><strong>${formatCount(overall.shares)}</strong><span>分享</span></div></div><div class="h5-secondary-metrics"><div><span>完播率</span><em>${overall.complete}%</em></div><div><span>互动率</span><em>${((overall.likes + overall.shares + overall.comments) / overall.plays * 100).toFixed(1)}%</em></div><div${incomeAction}><span>预估收益</span><em>${estimatedIncome(overall.income)}</em></div><div><span>观看时长</span><em>${watchHours(overall.watchHours || overall.plays / 50)}</em></div></div></section><section class="h5-panel"><div class="h5-panel-head"><b>数据趋势</b><div class="h5-presets"><button class="${state.trend === 'plays' ? 'active' : ''}" data-action="set-trend" data-trend="plays">播放</button><button class="${state.trend === 'income' ? 'active' : ''}" data-action="set-trend" data-trend="income">分成</button></div></div><p class="h5-trend-meta">${metrics.label} · ${state.trend === 'plays' ? '每日播放量' : '每日分成收入'}</p><div class="h5-chart-wrap">${chartSvg()}</div></section><section class="h5-panel"><div class="h5-panel-head"><b>单作品数据</b><span>${works.length} 个作品 · ${metrics.label}</span></div><div class="h5-work-list">${workCards}</div></section></main>${bottomNav()}`;
 }
 
 function renderData() {
@@ -512,6 +525,7 @@ function handleAction(action, target) {
     case 'back-settings': setView('settings'); break;
     case 'set-range': state.range = target.dataset.range; render(); break;
     case 'set-trend': state.trend = target.dataset.trend; render(); break;
+    case 'today-income': setToast('info', '预估收益暂不可用', '预估收益将在次日更新'); break;
     case 'set-history-range': state.historyRange = target.dataset.historyRange; render(); break;
     case 'app-hint': setToast('info', '请打开天天学 App', '进入「我的 · 个人中心」即可上传和管理作品'); break;
     case 'ranking': setToast('info', '大赛排名', 'Demo 中展示当前赛道第 18 名、全局第 126 名'); break;
