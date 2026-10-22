@@ -523,7 +523,7 @@ function handleAction(action, target) {
     case 'identity-minor': state.sheet = null; verifyIdentity('minor'); break;
     case 'identity-invalid': state.sheet = null; verifyIdentity('invalid'); break;
     case 'edit-nickname': openSheet('nickname', { nickname: state.creator.name }); break;
-    case 'edit-phone': openSheet('phone'); break;
+    case 'edit-phone': break;
     case 'sheet-code': sendCode(); break;
     case 'save-nickname': saveNickname(); break;
     case 'save-phone': savePhone(); break;
