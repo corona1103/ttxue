@@ -422,7 +422,7 @@ function renderIdentitySheet() {
   const saved = state.creator.identity;
   const editing = state.form.identityEditing || !saved;
   const savedSummary = saved && !editing ? `<div class="identity-mask"><span><b>${maskIdentityName(saved.name)}</b><small>${maskIdentityNumber(saved.idNumber)}</small></span><em>已加密</em></div>` : `<div class="field"><label class="field-label">姓名</label><input class="field-control" maxlength="20" placeholder="请输入真实姓名" value="${esc(state.form.name || '')}" data-sheet-field="name" /></div><div class="field"><label class="field-label">身份证号</label><input class="field-control" maxlength="18" placeholder="请输入 18 位身份证号" value="${esc(state.form.idNumber || '')}" data-sheet-field="idNumber" /></div>`;
-  return `${sheetHead('实名认证', '请完成身份认证，认证信息将用于作品分发、收益提现等')}<div class="sheet-note identity-guide">请完成身份认证，认证信息将用于作品分发、收益提现等。<br/><strong>未成年人需请监护人进行实名认证。</strong></div><div class="detail-lines identity-status"><div class="detail-line"><span>认证状态</span><span>${idStatusLabel()}</span></div><div class="detail-line"><span>证件类型</span><span>境内居民身份证</span></div></div>${savedSummary}<div class="sheet-note">实名认证完成后不可修改，仅支持查看加密信息；如需变更请联系平台运营。</div><div class="sheet-actions"><button class="secondary-btn" data-action="skip-onboarding">暂时跳过</button>${editing ? '<button class="primary-btn blue" data-action="submit-identity">确认并继续</button>' : '<button class="primary-btn blue" data-action="close-sheet">完成</button>'}</div>`;
+  return `${sheetHead('实名认证', '请完成身份认证，认证信息将用于作品分发、收益提现等')}<div class="sheet-note identity-guide">请完成身份认证，认证信息将用于作品分发、收益提现等。<br/><strong>未成年人需请监护人进行实名认证。</strong></div><div class="detail-lines identity-status"><div class="detail-line"><span>认证状态</span><span>${idStatusLabel()}</span></div><div class="detail-line"><span>证件类型</span><span>境内居民身份证</span></div></div>${savedSummary}<div class="sheet-note">实名认证完成后不可修改，实名信息仅可绑定到一个创作者账号中！</div><div class="sheet-actions"><button class="secondary-btn" data-action="skip-onboarding">暂时跳过</button>${editing ? '<button class="primary-btn blue" data-action="submit-identity">确认并继续</button>' : '<button class="primary-btn blue" data-action="close-sheet">完成</button>'}</div>`;
 }
 function renderBankSheet() {
   const platformError = { identity_invalid: '身份证错误，请检查或更换实名信息', bank_mismatch: '银行卡与实名认证信息不匹配，请更换本人银行卡', employee: '公司规定暂不支持在职员工签约创作者并获取收入，请检查或更换实名信息' }[state.form.platformError] || '';
@@ -483,6 +483,7 @@ document.addEventListener('click', (event) => {
   const viewTarget = event.target.closest('[data-view]');
   if (viewTarget) return setView(viewTarget.dataset.view);
   const actionTarget = event.target.closest('[data-action]');
+  if (actionTarget?.classList.contains('drawer-mask') && event.target !== actionTarget) return;
   if (actionTarget) handleAction(actionTarget.dataset.action, actionTarget);
 });
 
