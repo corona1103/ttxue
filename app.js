@@ -141,10 +141,9 @@ function sendCode() {
 
 function submitAuth() {
   const form = state.authForm;
-  if (!/^1\d{10}$/.test(form.phone)) return setToast('error', '手机号格式不正确', '请输入 11 位中国大陆手机号');
-  if (!form.code) return setToast('error', '请输入验证码', 'Demo 验证码为 123456');
   if (!form.agreed) return setToast('error', '请先勾选协议', '请阅读并同意《创作者版权协议》和《用户隐私声明xxx》');
-  state.creator.phone = form.phone;
+  // Demo 登录可跳过真实手机号和验证码输入；真实产品接入手机号验证码服务后再启用接口校验。
+  state.creator.phone = form.phone || state.creator.phone || '13812345678';
   state.authenticated = true;
   state.activeView = 'data';
   state.authForm = { phone: '', code: '', agreed: false };
@@ -313,7 +312,8 @@ function chartSvg() {
 }
 
 function renderAuth() {
-  return `<div class="h5-app is-auth"><main class="h5-auth"><div class="auth-brand"><span class="brand-mark">T</span><div><strong>天天学</strong><small>CREATOR CENTER</small></div></div><div class="auth-intro"><h1>登录创作者中心</h1><p>手机号验证码登录，新用户登录后将自动注册创建账号。</p></div><form class="auth-form" onsubmit="return false"><div class="field"><label class="field-label">手机号</label><input class="field-control" inputmode="numeric" maxlength="11" placeholder="请输入手机号" value="${esc(state.authForm.phone)}" data-auth-field="phone" /></div><div class="field"><label class="field-label">验证码</label><div class="code-row"><input class="field-control" inputmode="numeric" maxlength="6" placeholder="请输入验证码" value="${esc(state.authForm.code)}" data-auth-field="code" /><button class="code-button" data-action="auth-code" ${state.codeSent ? 'disabled' : ''}>${state.codeSent ? '已发送' : '获取验证码'}</button></div></div><label class="auth-agree"><input type="checkbox" ${state.authForm.agreed ? 'checked' : ''} data-auth-field="agreed" /><span>我已阅读并同意 <a href="#" data-action="open-agreement">《创作者版权协议》</a>、<a href="#" data-action="open-privacy">《用户隐私声明xxx》</a></span></label><button class="primary-btn" data-action="auth-submit">登录并继续</button></form><div class="auth-association">系统将自动关联天天学 App 账号，并读取 App 名称<br /><strong>「${esc(state.creator.appName)}」</strong><br /><span>无需填写创作者昵称</span></div><div class="auth-note">天天学创作者中心 · 本地 Demo<br />不会提交真实身份、银行卡或验证码信息</div></main>${state.sheet === 'agreement' || state.sheet === 'privacy' ? renderSheet() : ''}</div>`;
+  // 产品交互注释：登录成功后自动关联天天学 App 账号并读取 App 名称，无需填写创作者昵称；该规则不在真实登录页展示。
+  return `<div class="h5-app is-auth"><main class="h5-auth"><div class="auth-brand"><span class="brand-mark">T</span><div><strong>天天学</strong><small>CREATOR CENTER</small></div></div><div class="auth-intro"><h1>登录创作者中心</h1><p>手机号验证码登录，新用户登录后将自动注册创建账号。</p></div><form class="auth-form" onsubmit="return false"><div class="field"><label class="field-label">手机号</label><input class="field-control" inputmode="numeric" maxlength="11" placeholder="请输入手机号" value="${esc(state.authForm.phone)}" data-auth-field="phone" /></div><div class="field"><label class="field-label">验证码</label><div class="code-row"><input class="field-control" inputmode="numeric" maxlength="6" placeholder="请输入验证码" value="${esc(state.authForm.code)}" data-auth-field="code" /><button class="code-button" data-action="auth-code" ${state.codeSent ? 'disabled' : ''}>${state.codeSent ? '已发送' : '获取验证码'}</button></div></div><label class="auth-agree"><input type="checkbox" ${state.authForm.agreed ? 'checked' : ''} data-auth-field="agreed" /><span>我已阅读并同意 <a href="#" data-action="open-agreement">《创作者版权协议》</a>、<a href="#" data-action="open-privacy">《用户隐私声明xxx》</a></span></label><button class="primary-btn" data-action="auth-submit">登录并继续</button></form><div class="auth-note">天天学创作者中心 · 本地 Demo<br />不会提交真实身份、银行卡或验证码信息</div></main>${state.sheet === 'agreement' || state.sheet === 'privacy' ? renderSheet() : ''}</div>`;
 }
 
 function topbar(title, right = '') {
