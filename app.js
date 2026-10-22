@@ -357,6 +357,16 @@ function renderSettingsV2() {
   return `${topbar('账号设置', '<button class="topbar-action" data-action="logout">退出</button>')}<main class="h5-main"><section class="profile-card"><div class="profile-avatar">${esc(state.creator.name.slice(0, 1))}</div><div><strong>${esc(state.creator.name)}</strong><small>${formatPhone(state.creator.phone)} · 已关联天天学 App</small></div></section>${contractNotice}<section class="earnings-card"><div class="earnings-top"><span>分成收益</span><button class="earnings-link" data-action="open-earnings-rules">创作者激励　›</button></div><div class="earnings-value">${rmbFixed(state.earnings.gross)}</div><div class="earnings-estimate">预估税后+${rmbFixed(state.earnings.estimatedAfterTax)}</div><div class="earnings-foot"><span>结算中${rmbFixed(state.earnings.settling)}</span><button data-action="open-earnings-history">历史收益</button></div></section><section class="settings-group"><div class="settings-label">账号资料</div><div class="h5-list"><button class="setting-row" data-action="edit-nickname"><span class="row-left"><span class="row-icon">✎</span><span class="row-title">昵称</span></span><span class="row-value">${esc(state.creator.name)} <span class="chevron">›</span></span></button><button class="setting-row" data-action="edit-phone"><span class="row-left"><span class="row-icon">☎</span><span class="row-title">绑定手机号</span></span><span class="row-value">${formatPhone(state.creator.phone)} <span class="chevron">›</span></span></button></div></section><section class="settings-group"><div class="settings-label">身份与收款</div><div class="h5-list"><button class="setting-row" data-action="open-identity"><span class="row-left"><span class="row-icon">✓</span><span class="row-title">实名认证</span></span><span class="row-value"><span class="inline-status ${state.creator.verified ? 'success' : state.creator.isMinor ? 'danger' : 'warning'}">${esc(identityValue)}</span><span class="chevron">›</span></span></button><button class="setting-row" data-action="edit-bank"><span class="row-left"><span class="row-icon">¥</span><span class="row-title">绑定银行卡</span></span><span class="row-value">${esc(bankValue)} <span class="chevron">›</span></span></button></div></section><section class="settings-group"><div class="settings-label">安全与协议</div><div class="h5-list"><button class="setting-row" data-action="open-agreement"><span class="row-left"><span class="row-icon">§</span><span class="row-title">创作者版权协议</span></span><span class="row-value">已同意 <span class="chevron">›</span></span></button><button class="setting-row" data-action="open-privacy"><span class="row-left"><span class="row-icon">i</span><span class="row-title">用户隐私声明xxx</span></span><span class="chevron">›</span></button><button class="setting-row" data-action="logout"><span class="row-left"><span class="row-icon">↪</span><span class="row-title">退出登录</span></span><span class="chevron">›</span></button></div></section></main>${bottomNav()}`;
 }
 
+function renderSettingsEarningsCard() {
+  const locked = !state.creator.verified || state.creator.isMinor || !state.creator.bank || !state.creator.platformRegistered;
+  if (locked) return `<section class="earnings-card earnings-locked" data-action="open-onboarding"><div class="earnings-top"><span>分成收益</span><span class="earnings-lock-icon">🔒</span></div><div class="earnings-locked-title">完成信息收集后解锁收益</div><div class="earnings-locked-desc">请完成实名认证、银行卡绑定和创作者注册</div><div class="earnings-foot"><span>当前无法结算打款</span><span class="earnings-locked-link">点击继续 ›</span></div></section>`;
+  return `<section class="earnings-card"><div class="earnings-top"><span>分成收益</span><button class="earnings-link" data-action="open-earnings-rules">创作者激励　›</button></div><div class="earnings-value">${rmbFixed(state.earnings.gross)}</div><div class="earnings-estimate">预估税后+${rmbFixed(state.earnings.estimatedAfterTax)}</div><div class="earnings-foot"><span>结算中${rmbFixed(state.earnings.settling)}</span><button data-action="open-earnings-history">历史收益</button></div></section>`;
+}
+
+function renderSettingsV3() {
+  return renderSettingsV2().replace(/<section class="earnings-card">[\s\S]*?<\/section>/, renderSettingsEarningsCard());
+}
+
 function renderWithdrawal() {
   const withdraw = state.withdrawal;
   const notice = state.creator.isMinor
@@ -374,7 +384,7 @@ function renderWithdrawal() {
 }
 
 function renderApp() {
-  const views = { works: renderWorks, data: renderData, settings: renderSettingsV2, withdrawal: renderWithdrawal };
+  const views = { works: renderWorks, data: renderData, settings: renderSettingsV3, withdrawal: renderWithdrawal };
   return `<div class="h5-app">${views[state.activeView] ? views[state.activeView]() : renderWorks()}${renderSheet()}</div>`;
 }
 
@@ -444,6 +454,7 @@ function handleAction(action, target) {
     case 'open-agreement': if (state.authenticated) openSheet('agreement'); else { state.sheet = 'agreement'; render(); } break;
     case 'open-privacy': if (state.authenticated) openSheet('privacy'); else { state.sheet = 'privacy'; render(); } break;
     case 'open-identity': openSheet('identity', { name: state.creator.identity?.name || '', idNumber: '', identityEditing: !state.creator.identity }); break;
+    case 'open-onboarding': startOnboarding(); break;
     case 'edit-identity': state.form = { name: state.creator.identity?.name || '', idNumber: '', identityEditing: true }; render(); break;
     case 'submit-identity': submitIdentity(); break;
     case 'skip-onboarding': skipOnboardingStep(); break;
