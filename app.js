@@ -20,10 +20,9 @@ const trendData = {
 
 const initialState = {
   authenticated: false,
-  authMode: 'login',
-  authForm: { phone: '', code: '', nickname: '', agreed: false },
+  authForm: { phone: '', code: '', agreed: false },
   codeSent: false,
-  creator: { name: '小王的科学大厅', phone: '13812345678', verified: false, idStatus: 'unverified', isMinor: false, bank: null, payee: '微信 · 小王' },
+  creator: { name: '小王的科学大厅', appName: '小王的科学大厅', phone: '13812345678', verified: false, idStatus: 'unverified', isMinor: false, identity: null, bank: null, platformRegistered: false, contractStatus: 'unsigned', payee: '微信 · 小王' },
   activeView: 'works',
   sheet: null,
   form: {},
@@ -35,6 +34,9 @@ const initialState = {
   historyStart: '2026-04-19',
   historyEnd: '2026-10-19',
   postLoginPendingIdentity: false,
+  onboardingQueue: [],
+  onboardingActive: false,
+  onboardingReturnView: 'data',
   earnings: { total: 12840.5, gross: 3000, estimatedAfterTax: 2800.66, available: 2846.5, frozen: 0, settling: 1234.99, withdrawn: 6780 },
   withdrawal: { id: 'WD202610120018', amount: 0, net: 0, status: 'draft', reason: '', timeline: [] },
   toast: null
@@ -48,6 +50,8 @@ const rmbFixed = (value) => `￥${Number(value || 0).toFixed(2)}`;
 const numberText = (value) => Number(value || 0).toLocaleString('zh-CN');
 const formatPhone = (value) => value ? `${value.slice(0, 3)} **** ${value.slice(-4)}` : '未绑定';
 const idStatusLabel = () => ({ pass: '已认证', minor: '未成年人', invalid: '认证失败', service_error: '核验异常', unverified: '未认证' }[state.creator.idStatus] || '未认证');
+const maskIdentityName = (value) => value ? `${value.slice(0, 1)}${'*'.repeat(Math.max(1, value.length - 1))}` : '未填写';
+const maskIdentityNumber = (value) => value ? `${value.slice(0, 2)}******${value.slice(-2)}` : '未填写';
 
 const statusText = {
   draft: ['待提交', 'warning'], pending_review: ['审核中', 'warning'], processing: ['支付处理中', 'blue'], paid: ['支付成功', 'success'], settled: ['已到账', 'success'], failed: ['提现失败', 'danger']
@@ -84,6 +88,7 @@ function setView(view) {
 function openSheet(name, payload = {}) {
   state.sheet = name;
   state.form = clone(payload);
+  state.onboardingActive = false;
   render();
 }
 
@@ -91,6 +96,39 @@ function closeSheet() {
   state.sheet = null;
   state.form = {};
   render();
+}
+
+function startOnboarding() {
+  state.onboardingQueue = [];
+  if (!state.creator.verified || state.creator.isMinor || state.creator.idStatus !== 'pass' || !state.creator.identity) state.onboardingQueue.push('identity');
+  if (!state.creator.bank || !state.creator.platformRegistered) state.onboardingQueue.push('bank');
+  state.onboardingReturnView = state.onboardingQueue.length ? 'settings' : 'data';
+  state.onboardingActive = true;
+  nextOnboardingStep();
+}
+
+function nextOnboardingStep() {
+  const next = state.onboardingQueue.shift();
+  if (!next) {
+    state.onboardingActive = false;
+    state.sheet = null;
+    state.form = {};
+    state.activeView = state.onboardingReturnView;
+    render();
+    return;
+  }
+  state.sheet = next;
+  state.form = next === 'identity'
+    ? { name: state.creator.identity?.name || '', idNumber: '', identityEditing: !state.creator.identity }
+    : { bankName: state.creator.bank?.bankName || '', branchName: state.creator.bank?.branchName || '', cardNumber: '', platformError: '' };
+  render();
+}
+
+function skipOnboardingStep() {
+  if (!state.onboardingActive) return closeSheet();
+  state.sheet = null;
+  state.form = {};
+  nextOnboardingStep();
 }
 
 function sendCode() {
@@ -103,24 +141,16 @@ function sendCode() {
 
 function submitAuth() {
   const form = state.authForm;
-  if (state.authMode === 'register') {
-    if (!/^1\d{10}$/.test(form.phone)) return setToast('error', '手机号格式不正确', '请输入 11 位中国大陆手机号');
-    if (!form.code) return setToast('error', '请输入验证码', 'Demo 验证码为 123456');
-    if (!form.nickname.trim()) return setToast('error', '请填写创作者昵称', '昵称会展示在创作者主页');
-    if (!form.agreed) return setToast('error', '请先同意版权协议', '注册创作者账号前必须同意《创作者版权协议》');
-    state.creator.name = form.nickname.trim();
-    setToast('success', '注册成功', '欢迎加入天天学创作者中心');
-  } else {
-    if (form.phone && !/^1\d{10}$/.test(form.phone)) return setToast('error', '手机号格式不正确', '手机号留空即可直接登录');
-    setToast('success', '登录成功', '已进入创作者中心');
-  }
-  if (form.phone) state.creator.phone = form.phone;
+  if (!/^1\d{10}$/.test(form.phone)) return setToast('error', '手机号格式不正确', '请输入 11 位中国大陆手机号');
+  if (!form.code) return setToast('error', '请输入验证码', 'Demo 验证码为 123456');
+  if (!form.agreed) return setToast('error', '请先勾选协议', '请阅读并同意《创作者版权协议》和《用户隐私声明xxx》');
+  state.creator.phone = form.phone;
   state.authenticated = true;
-  state.postLoginPendingIdentity = !(state.creator.verified && !state.creator.isMinor);
-  state.activeView = state.postLoginPendingIdentity ? 'settings' : 'data';
-  state.sheet = state.postLoginPendingIdentity ? 'identity' : null;
-  state.authForm = { phone: '', code: '', nickname: '', agreed: false };
+  state.activeView = 'data';
+  state.authForm = { phone: '', code: '', agreed: false };
   render();
+  setToast('success', '登录成功', '已自动关联天天学 App 账号，并读取 App 名称');
+  startOnboarding();
 }
 
 function updateAuthField(field, value) {
@@ -151,6 +181,20 @@ function verifyIdentity(result) {
   render();
 }
 
+function submitIdentity() {
+  const name = String(state.form.name || '').trim();
+  const idNumber = String(state.form.idNumber || '').replace(/\s/g, '').toUpperCase();
+  if (!/^[^\d\s]+$/.test(name)) return setToast('error', '姓名格式不正确', '姓名不能包含数字或空格');
+  if (!/^[0-9A-Z]{18}$/.test(idNumber)) return setToast('error', '身份证号格式不正确', '请输入 18 位数字或字母');
+  state.creator.identity = { name, idNumber };
+  state.creator.verified = true;
+  state.creator.isMinor = false;
+  state.creator.idStatus = 'pass';
+  setToast('success', '实名认证通过', '实名认证信息已保存，后续仅支持查看加密信息');
+  if (state.onboardingActive) nextOnboardingStep();
+  else closeSheet();
+}
+
 function saveNickname() {
   const name = String(state.form.nickname || '').trim();
   if (name.length < 2) return setToast('error', '昵称太短', '昵称至少需要 2 个字符');
@@ -170,12 +214,32 @@ function savePhone() {
 
 function saveBank() {
   const bankName = String(state.form.bankName || '').trim();
+  const branchName = String(state.form.branchName || '').trim();
   const cardNumber = String(state.form.cardNumber || '').replace(/\s/g, '');
-  if (!bankName) return setToast('error', '请填写开户行', '例如：中国建设银行');
+  if (!state.creator.verified || !state.creator.identity) return setBankError('identity_invalid');
+  if (!bankName) return setToast('error', '请选择银行', '请选择银行卡开户行');
+  if (!branchName) return setToast('error', '请填写支行', '请输入开户支行名称');
   if (!/^\d{16,19}$/.test(cardNumber)) return setToast('error', '银行卡号格式不正确', '请输入 16-19 位银行卡号');
-  state.creator.bank = { bankName, last4: cardNumber.slice(-4) };
-  closeSheet();
-  setToast('success', '银行卡绑定成功', `已绑定 ${bankName} 尾号 ${cardNumber.slice(-4)} 的银行卡`);
+  state.creator.bank = { bankName, branchName, last4: cardNumber.slice(-4) };
+  state.creator.platformRegistered = true;
+  state.creator.contractStatus = 'pending';
+  state.form.platformError = '';
+  setToast('success', '注册成功', '已向您的登录手机号发送创作者签约短信，请及时查看并在30日内完成电子签约，未及时签约将影响收入分成');
+  if (state.onboardingActive) nextOnboardingStep();
+  else closeSheet();
+}
+
+function setBankError(code) {
+  state.form.platformError = code;
+  render();
+}
+
+function resetIdentityFromBank() {
+  state.onboardingActive = true;
+  state.onboardingQueue = ['bank'];
+  state.sheet = 'identity';
+  state.form = { name: '', idNumber: '', identityEditing: true };
+  render();
 }
 
 function validateWithdraw(amount) {
@@ -184,6 +248,7 @@ function validateWithdraw(amount) {
   if (amount < 10) return '最低提现金额为 ¥10';
   if (amount > state.earnings.available) return '提现金额不能超过可提现余额';
   if (!state.creator.bank) return '请先绑定银行卡';
+  if (!state.creator.platformRegistered) return '请先完成兼职平台注册';
   return '';
 }
 
@@ -248,8 +313,7 @@ function chartSvg() {
 }
 
 function renderAuth() {
-  const register = state.authMode === 'register';
-  return `<div class="h5-app is-auth"><main class="h5-auth"><div class="auth-brand"><span class="brand-mark">T</span><div><strong>天天学</strong><small>CREATOR CENTER</small></div></div><div class="auth-intro"><h1>${register ? '加入创作者计划' : '欢迎回来'}</h1><p>${register ? '完成注册，开始管理你的创作数据和收益。' : '登录创作者中心，查看你的作品表现。'}</p></div><form class="auth-form" onsubmit="return false"><div class="auth-tabs"><button class="auth-tab ${!register ? 'active' : ''}" data-action="auth-login">登录</button><button class="auth-tab ${register ? 'active' : ''}" data-action="auth-register">注册</button></div>${register ? '<div class="field"><label class="field-label">创作者昵称</label><input class="field-control" placeholder="请输入昵称" value="' + esc(state.authForm.nickname) + '" data-auth-field="nickname" /></div>' : ''}<div class="field"><label class="field-label">手机号${register ? '' : '（可留空）'}</label><input class="field-control" inputmode="numeric" maxlength="11" placeholder="${register ? '请输入手机号' : '登录 Demo 可留空'}" value="${esc(state.authForm.phone)}" data-auth-field="phone" /></div><div class="field"><label class="field-label">验证码${register ? '' : '（可留空）'}</label><div class="code-row"><input class="field-control" inputmode="numeric" maxlength="6" placeholder="${register ? '请输入验证码' : '登录 Demo 可留空'}" value="${esc(state.authForm.code)}" data-auth-field="code" /><button class="code-button" data-action="auth-code" ${state.codeSent ? 'disabled' : ''}>${state.codeSent ? '已发送' : '获取验证码'}</button></div></div>${register ? '<label class="auth-agree"><input type="checkbox" ' + (state.authForm.agreed ? 'checked' : '') + ' data-auth-field="agreed" /><span>我已阅读并同意 <a href="#" data-action="open-agreement">《创作者版权协议》</a>，并承诺上传内容享有合法版权。</span></label>' : '<div class="auth-agree"><span>登录模式可直接点击登录，无需填写手机号和验证码。</span></div>'}<button class="primary-btn" data-action="auth-submit">${register ? '同意协议并注册' : '登录创作者中心'}</button></form><div class="auth-note">天天学创作者中心 · 本地 Demo<br />不会提交真实身份、银行卡或验证码信息</div></main>${state.sheet === 'agreement' ? renderSheet() : ''}</div>`;
+  return `<div class="h5-app is-auth"><main class="h5-auth"><div class="auth-brand"><span class="brand-mark">T</span><div><strong>天天学</strong><small>CREATOR CENTER</small></div></div><div class="auth-intro"><h1>登录创作者中心</h1><p>手机号验证码登录，新用户登录后将自动注册创建账号。</p></div><form class="auth-form" onsubmit="return false"><div class="field"><label class="field-label">手机号</label><input class="field-control" inputmode="numeric" maxlength="11" placeholder="请输入手机号" value="${esc(state.authForm.phone)}" data-auth-field="phone" /></div><div class="field"><label class="field-label">验证码</label><div class="code-row"><input class="field-control" inputmode="numeric" maxlength="6" placeholder="请输入验证码" value="${esc(state.authForm.code)}" data-auth-field="code" /><button class="code-button" data-action="auth-code" ${state.codeSent ? 'disabled' : ''}>${state.codeSent ? '已发送' : '获取验证码'}</button></div></div><label class="auth-agree"><input type="checkbox" ${state.authForm.agreed ? 'checked' : ''} data-auth-field="agreed" /><span>我已阅读并同意 <a href="#" data-action="open-agreement">《创作者版权协议》</a>、<a href="#" data-action="open-privacy">《用户隐私声明xxx》</a></span></label><button class="primary-btn" data-action="auth-submit">登录并继续</button></form><div class="auth-association">系统将自动关联天天学 App 账号，并读取 App 名称<br /><strong>「${esc(state.creator.appName)}」</strong><br /><span>无需填写创作者昵称</span></div><div class="auth-note">天天学创作者中心 · 本地 Demo<br />不会提交真实身份、银行卡或验证码信息</div></main>${state.sheet === 'agreement' || state.sheet === 'privacy' ? renderSheet() : ''}</div>`;
 }
 
 function topbar(title, right = '') {
@@ -276,12 +340,21 @@ function renderDataWithContest() {
 }
 
 function renderData() {
-  return renderDataWithContest().replace(/<section class="h5-contest">[\s\S]*?<\/section><section class="h5-panel">/, '<section class="h5-panel">');
+  const notice = state.creator.contractStatus === 'pending' ? '<div class="notice-card contract-notice"><strong>创作者签约待完成</strong>已向您的登录手机号发送创作者签约短信，请及时查看并在30日内完成电子签约，未及时签约将影响收入分成。</div>' : '';
+  return renderDataWithContest().replace(/<section class="h5-contest">[\s\S]*?<\/section><section class="h5-panel">/, '<section class="h5-panel">').replace('<main class="h5-main">', `<main class="h5-main">${notice}`);
 }
 
 function renderSettings() {
   const bankValue = state.creator.bank ? `${state.creator.bank.bankName} · 尾号 ${state.creator.bank.last4}` : '未绑定';
+  const identityValue = state.creator.identity ? `${maskIdentityName(state.creator.identity.name)} ${maskIdentityNumber(state.creator.identity.idNumber)}` : idStatusLabel();
   return `${topbar('账号设置', '<button class="topbar-action" data-action="logout">退出</button>')}<main class="h5-main"><section class="profile-card"><div class="profile-avatar">${esc(state.creator.name.slice(0, 1))}</div><div><strong>${esc(state.creator.name)}</strong><small>${formatPhone(state.creator.phone)} · 创作者账号</small></div></section><section class="earnings-card"><div class="earnings-top"><span>分成收益</span><button class="earnings-link" data-action="open-earnings-rules">创作者激励　›</button></div><div class="earnings-value">${rmbFixed(state.earnings.gross)}</div><div class="earnings-estimate">预估税后+${rmbFixed(state.earnings.estimatedAfterTax)}</div><div class="earnings-foot"><span>结算中${rmbFixed(state.earnings.settling)}</span><button data-action="open-earnings-history">历史收益</button></div></section><section class="settings-group"><div class="settings-label">账号资料</div><div class="h5-list"><button class="setting-row" data-action="edit-nickname"><span class="row-left"><span class="row-icon">✎</span><span class="row-title">昵称</span></span><span class="row-value">${esc(state.creator.name)} <span class="chevron">›</span></span></button><button class="setting-row" data-action="edit-phone"><span class="row-left"><span class="row-icon">☎</span><span class="row-title">绑定手机号</span></span><span class="row-value">${formatPhone(state.creator.phone)} <span class="chevron">›</span></span></button></div></section><section class="settings-group"><div class="settings-label">身份与收款</div><div class="h5-list"><button class="setting-row" data-action="open-identity"><span class="row-left"><span class="row-icon">✓</span><span class="row-title">实名认证</span></span><span class="row-value"><span class="inline-status ${state.creator.verified ? 'success' : state.creator.isMinor ? 'danger' : 'warning'}">${idStatusLabel()}</span><span class="chevron">›</span></span></button><button class="setting-row" data-action="edit-bank"><span class="row-left"><span class="row-icon">¥</span><span class="row-title">绑定银行卡</span></span><span class="row-value">${esc(bankValue)} <span class="chevron">›</span></span></button></div></section><section class="settings-group"><div class="settings-label">安全与协议</div><div class="h5-list"><button class="setting-row" data-action="open-agreement"><span class="row-left"><span class="row-icon">§</span><span class="row-title">创作者版权协议</span></span><span class="row-value">已同意 <span class="chevron">›</span></span></button><button class="setting-row" data-action="logout"><span class="row-left"><span class="row-icon">↪</span><span class="row-title">退出登录</span></span><span class="chevron">›</span></button></div></section></main>${bottomNav()}`;
+}
+
+function renderSettingsV2() {
+  const bankValue = state.creator.bank ? `${state.creator.bank.bankName} · ${state.creator.bank.branchName} · 尾号 ${state.creator.bank.last4}` : '未绑定';
+  const identityValue = state.creator.identity ? `${maskIdentityName(state.creator.identity.name)} ${maskIdentityNumber(state.creator.identity.idNumber)}` : idStatusLabel();
+  const contractNotice = state.creator.platformRegistered ? '<div class="notice-card contract-notice"><strong>兼职平台注册成功</strong>已向登录手机号发送创作者签约短信，请及时查看并在30日内完成电子签约，未及时签约将影响收入分成。</div>' : '<div class="notice-card"><strong>暂未完成结算平台注册</strong>完成实名认证和银行卡绑定后，才能进入结算打款流程。</div>';
+  return `${topbar('账号设置', '<button class="topbar-action" data-action="logout">退出</button>')}<main class="h5-main"><section class="profile-card"><div class="profile-avatar">${esc(state.creator.name.slice(0, 1))}</div><div><strong>${esc(state.creator.name)}</strong><small>${formatPhone(state.creator.phone)} · 已关联天天学 App</small></div></section>${contractNotice}<section class="earnings-card"><div class="earnings-top"><span>分成收益</span><button class="earnings-link" data-action="open-earnings-rules">创作者激励　›</button></div><div class="earnings-value">${rmbFixed(state.earnings.gross)}</div><div class="earnings-estimate">预估税后+${rmbFixed(state.earnings.estimatedAfterTax)}</div><div class="earnings-foot"><span>结算中${rmbFixed(state.earnings.settling)}</span><button data-action="open-earnings-history">历史收益</button></div></section><section class="settings-group"><div class="settings-label">账号资料</div><div class="h5-list"><button class="setting-row" data-action="edit-nickname"><span class="row-left"><span class="row-icon">✎</span><span class="row-title">昵称</span></span><span class="row-value">${esc(state.creator.name)} <span class="chevron">›</span></span></button><button class="setting-row" data-action="edit-phone"><span class="row-left"><span class="row-icon">☎</span><span class="row-title">绑定手机号</span></span><span class="row-value">${formatPhone(state.creator.phone)} <span class="chevron">›</span></span></button></div></section><section class="settings-group"><div class="settings-label">身份与收款</div><div class="h5-list"><button class="setting-row" data-action="open-identity"><span class="row-left"><span class="row-icon">✓</span><span class="row-title">实名认证</span></span><span class="row-value"><span class="inline-status ${state.creator.verified ? 'success' : state.creator.isMinor ? 'danger' : 'warning'}">${esc(identityValue)}</span><span class="chevron">›</span></span></button><button class="setting-row" data-action="edit-bank"><span class="row-left"><span class="row-icon">¥</span><span class="row-title">绑定银行卡</span></span><span class="row-value">${esc(bankValue)} <span class="chevron">›</span></span></button></div></section><section class="settings-group"><div class="settings-label">安全与协议</div><div class="h5-list"><button class="setting-row" data-action="open-agreement"><span class="row-left"><span class="row-icon">§</span><span class="row-title">创作者版权协议</span></span><span class="row-value">已同意 <span class="chevron">›</span></span></button><button class="setting-row" data-action="open-privacy"><span class="row-left"><span class="row-icon">i</span><span class="row-title">用户隐私声明xxx</span></span><span class="chevron">›</span></button><button class="setting-row" data-action="logout"><span class="row-left"><span class="row-icon">↪</span><span class="row-title">退出登录</span></span><span class="chevron">›</span></button></div></section></main>${bottomNav()}`;
 }
 
 function renderWithdrawal() {
@@ -301,7 +374,7 @@ function renderWithdrawal() {
 }
 
 function renderApp() {
-  const views = { works: renderWorks, data: renderData, settings: renderSettings, withdrawal: renderWithdrawal };
+  const views = { works: renderWorks, data: renderData, settings: renderSettingsV2, withdrawal: renderWithdrawal };
   return `<div class="h5-app">${views[state.activeView] ? views[state.activeView]() : renderWorks()}${renderSheet()}</div>`;
 }
 
@@ -309,6 +382,7 @@ function renderSheet() {
   if (!state.sheet) return '';
   const sheetBody = {
     agreement: renderAgreementSheet,
+    privacy: renderPrivacySheet,
     earningsRules: renderEarningsRulesSheet,
     earningsHistory: renderEarningsHistorySheet,
     nickname: renderNicknameSheet,
@@ -321,7 +395,8 @@ function renderSheet() {
 }
 
 function sheetHead(title, subtitle = '') { return `<div class="sheet-head"><div><h3>${title}</h3>${subtitle ? `<p>${subtitle}</p>` : ''}</div><button class="sheet-close" data-action="close-sheet">×</button></div>`; }
-function renderAgreementSheet() { return `${sheetHead('创作者版权协议', '注册前请阅读并确认') }<div class="sheet-note" style="background:#fff">一、创作者保证上传、发布及参与激励的内容拥有合法、完整、有效的著作权或已取得必要授权。<br/><br/>二、创作者不得上传侵犯他人知识产权、肖像权、隐私权或其他合法权益的内容。<br/><br/>三、平台有权对内容进行审核，并对违规内容采取下架、限流、取消激励或终止合作等措施。<br/><br/>四、创作者应配合平台进行实名、未成年人保护和收益结算相关的合规核验。</div><div class="sheet-actions"><button class="primary-btn" data-action="agree-and-register">同意并返回注册</button></div>`; }
+function renderAgreementSheet() { return `${sheetHead('创作者版权协议', '登录前请阅读并确认') }<div class="sheet-note" style="background:#fff">一、创作者保证上传、发布及参与激励的内容拥有合法、完整、有效的著作权或已取得必要授权。<br/><br/>二、创作者不得上传侵犯他人知识产权、肖像权、隐私权或其他合法权益的内容。<br/><br/>三、平台有权对内容进行审核，并对违规内容采取下架、限流、取消激励或终止合作等措施。<br/><br/>四、创作者应配合平台进行实名、未成年人保护和收益结算相关的合规核验。</div><div class="sheet-actions"><button class="primary-btn" data-action="close-sheet">返回登录</button></div>`; }
+function renderPrivacySheet() { return `${sheetHead('用户隐私声明xxx', '登录前请阅读并确认')}<div class="sheet-note" style="background:#fff">平台将基于手机号验证码关联天天学 App 账号，并在获得授权后读取 App 名称。实名认证、银行卡和收益结算信息仅用于作品分发、收益结算及合规校验。</div><div class="sheet-actions"><button class="primary-btn" data-action="close-sheet">返回登录</button></div>`; }
 function renderEarningsRulesSheet() { return `${sheetHead('收益核算规则', '创作者激励收益的计算与结算说明')}<div class="detail-lines"><div class="detail-line"><span>收益来源</span><span>会员拉新分成、付费视频播放分成等</span></div><div class="detail-line"><span>统计周期</span><span>上月 25 日至本月 24 日</span></div><div class="detail-line"><span>数据更新时间</span><span>次日 10:00 更新前一日收益</span></div><div class="detail-line"><span>收益回退</span><span>订单退费、视频下架等情况，收益自动回退</span></div><div class="detail-line"><span>结算打款</span><span>公民需合法纳税，系统将在次月 15 日前将税后收入打款至绑定银行卡。</span></div></div><div class="sheet-note" style="margin-top:15px">分成收益以平台最终结算账单为准，税前收益和税后实际打款金额会在历史收益中分别展示。</div><div class="sheet-actions"><button class="primary-btn blue" data-action="close-sheet">我知道了</button></div>`; }
 function renderEarningsHistorySheet() {
   const records = [
@@ -343,8 +418,18 @@ function renderEarningsHistorySheet() {
 }
 function renderNicknameSheet() { return `${sheetHead('修改昵称', '昵称会展示在创作者数据中心和个人主页')}<div class="field"><label class="field-label">新昵称</label><input class="field-control" maxlength="20" value="${esc(state.form.nickname || state.creator.name)}" data-sheet-field="nickname" /></div><div class="sheet-actions"><button class="primary-btn blue" data-action="save-nickname">保存昵称</button></div>`; }
 function renderPhoneSheet() { return `${sheetHead('修改绑定手机号', '更换手机号需要完成验证码校验')}<div class="field"><label class="field-label">新手机号</label><input class="field-control" inputmode="numeric" maxlength="11" placeholder="请输入新手机号" value="${esc(state.form.newPhone || '')}" data-sheet-field="newPhone" /></div><div class="field"><label class="field-label">验证码</label><div class="code-row"><input class="field-control" inputmode="numeric" maxlength="6" placeholder="请输入验证码" value="${esc(state.form.code || '')}" data-sheet-field="code" /><button class="code-button" data-action="sheet-code">获取验证码</button></div></div><div class="sheet-actions"><button class="primary-btn blue" data-action="save-phone">确认更换</button></div>`; }
-function renderIdentitySheet() { return `${sheetHead('实名认证', '提现前需要确认境内身份证有效且已满 18 周岁')}<div class="detail-lines"><div class="detail-line"><span>认证状态</span><span>${idStatusLabel()}</span></div><div class="detail-line"><span>证件类型</span><span>境内居民身份证</span></div><div class="detail-line"><span>提现资格</span><span>${state.creator.verified ? '已开放' : '暂未开放'}</span></div></div><div class="sheet-note" style="margin-top:15px">Demo 中以下按钮用于模拟身份核验结果，不会提交真实证件信息。</div><div class="sheet-actions"><button class="secondary-btn" data-action="identity-invalid">证件无效</button><button class="secondary-btn" data-action="identity-minor">未成年人</button><button class="primary-btn blue" data-action="identity-pass">认证通过</button></div>`; }
-function renderBankSheet() { return `${sheetHead('绑定银行卡', '用于创作者收益提现，请绑定本人银行卡')}<div class="field"><label class="field-label">开户行</label><input class="field-control" placeholder="例如：中国建设银行" value="${esc(state.form.bankName || '')}" data-sheet-field="bankName" /></div><div class="field"><label class="field-label">银行卡号</label><input class="field-control" inputmode="numeric" maxlength="19" placeholder="请输入 16-19 位银行卡号" value="${esc(state.form.cardNumber || '')}" data-sheet-field="cardNumber" /></div><div class="sheet-note">银行卡户名需与实名认证姓名一致。Demo 仅保存尾号，不会提交真实银行卡信息。</div><div class="sheet-actions"><button class="primary-btn blue" data-action="save-bank">确认绑定</button></div>`; }
+function renderIdentitySheet() {
+  const saved = state.creator.identity;
+  const editing = state.form.identityEditing || !saved;
+  const savedSummary = saved && !editing ? `<div class="identity-mask"><span><b>${maskIdentityName(saved.name)}</b><small>${maskIdentityNumber(saved.idNumber)}</small></span><em>已加密</em></div>` : `<div class="field"><label class="field-label">姓名</label><input class="field-control" maxlength="20" placeholder="请输入真实姓名" value="${esc(state.form.name || '')}" data-sheet-field="name" /></div><div class="field"><label class="field-label">身份证号</label><input class="field-control" maxlength="18" placeholder="请输入 18 位身份证号" value="${esc(state.form.idNumber || '')}" data-sheet-field="idNumber" /></div>`;
+  return `${sheetHead('实名认证', '请完成身份认证，认证信息将用于作品分发、收益提现等')}<div class="sheet-note identity-guide">请完成身份认证，认证信息将用于作品分发、收益提现等。<br/><strong>未成年人需请监护人进行实名认证。</strong></div><div class="detail-lines identity-status"><div class="detail-line"><span>认证状态</span><span>${idStatusLabel()}</span></div><div class="detail-line"><span>证件类型</span><span>境内居民身份证</span></div></div>${savedSummary}<div class="sheet-note">实名认证完成后不可修改，仅支持查看加密信息；如需变更请联系平台运营。</div><div class="sheet-actions"><button class="secondary-btn" data-action="skip-onboarding">暂时跳过</button>${editing ? '<button class="primary-btn blue" data-action="submit-identity">确认并继续</button>' : '<button class="primary-btn blue" data-action="close-sheet">完成</button>'}</div>`;
+}
+function renderBankSheet() {
+  const platformError = { identity_invalid: '身份证错误，请检查或更换实名信息', bank_mismatch: '银行卡与实名认证信息不匹配，请更换本人银行卡', employee: '公司规定暂不支持在职员工签约创作者并获取收入，请检查或更换实名信息' }[state.form.platformError] || '';
+  const bankOptions = ['中国工商银行', '中国建设银行', '中国银行', '招商银行'].map((bank) => `<option value="${bank}" ${state.form.bankName === bank ? 'selected' : ''}>${bank}</option>`).join('');
+  const errorBlock = platformError ? `<div class="sheet-error"><strong>兼职平台注册失败</strong><span>${platformError}</span>${state.form.platformError === 'employee' ? '<button class="link-btn" data-action="reset-identity-from-bank">返回第一步修改身份证信息</button>' : '<button class="link-btn" data-action="retry-bank">重新绑定银行卡</button>'}</div>` : '';
+  return `${sheetHead('绑定银行卡', '用于创作者收益提现，确认后将联动兼职平台注册')}<div class="sheet-note">请绑定本人银行卡。确认后系统会联动兼职平台完成创作者注册，注册成功后会向登录手机号发送电子签约短信。</div>${errorBlock}<div class="field"><label class="field-label">银行</label><select class="field-control" data-sheet-field="bankName"><option value="">请选择银行</option>${bankOptions}</select></div><div class="field"><label class="field-label">支行</label><input class="field-control" placeholder="请输入开户支行名称" value="${esc(state.form.branchName || '')}" data-sheet-field="branchName" /></div><div class="field"><label class="field-label">银行卡号</label><input class="field-control" inputmode="numeric" maxlength="23" placeholder="请输入银行卡号" value="${esc(state.form.cardNumber || '')}" data-sheet-field="cardNumber" /></div><div class="sheet-note">银行卡号输入会自动去除空格；实名认证信息不可修改，银行卡支持重新绑定。</div><div class="sheet-actions"><button class="secondary-btn" data-action="skip-onboarding">暂时跳过</button><button class="primary-btn blue" data-action="save-bank">确认并注册</button></div><div class="demo-actions"><span>Demo 模拟平台返回：</span><button data-action="simulate-bank-error" data-bank-error="identity_invalid">身份证错误</button><button data-action="simulate-bank-error" data-bank-error="bank_mismatch">不匹配</button><button data-action="simulate-bank-error" data-bank-error="employee">已在职人员</button></div>`;
+}
 function renderWithdrawSheet() { const amount = Number(state.form.amount || 0); const error = state.form.amount ? validateWithdraw(amount) : ''; return `${sheetHead('提交提现', '提现前请确认实名认证和收款银行卡')}<div class="earnings-card"><div class="earnings-top"><span>可提现余额</span><span>${money(state.earnings.available)}</span></div><div class="earnings-value" data-withdraw-preview="amount">${money(amount)}</div><div class="earnings-foot"><span>预计到账</span><span data-withdraw-preview="net">${money(amount)}</span></div></div><div class="field" style="margin-top:16px"><label class="field-label">提现金额</label><input class="field-control" inputmode="decimal" placeholder="最低 ¥10" value="${esc(state.form.amount || '')}" data-sheet-field="amount" /><div class="error-text">${error}</div></div><div class="detail-lines"><div class="detail-line"><span>收款银行卡</span><span>${state.creator.bank ? `${esc(state.creator.bank.bankName)} · 尾号 ${state.creator.bank.last4}` : '未绑定'}</span></div><div class="detail-line"><span>平台服务费</span><span style="color:var(--green)">暂不收取</span></div><div class="detail-line"><span>预计到账时间</span><span>1 个工作日</span></div></div><div class="sheet-actions"><button class="primary-btn blue" data-action="submit-withdraw" ${error || !state.form.amount ? 'disabled' : ''}>确认提现</button></div>`; }
 
 function render() {
@@ -354,13 +439,14 @@ function render() {
 
 function handleAction(action, target) {
   switch (action) {
-    case 'auth-login': state.authMode = 'login'; state.codeSent = false; render(); break;
-    case 'auth-register': state.authMode = 'register'; state.codeSent = false; render(); break;
     case 'auth-code': sendCode(); break;
     case 'auth-submit': submitAuth(); break;
     case 'open-agreement': if (state.authenticated) openSheet('agreement'); else { state.sheet = 'agreement'; render(); } break;
-    case 'agree-and-register': state.sheet = null; state.authMode = 'register'; state.authForm.agreed = true; render(); break;
-    case 'open-identity': openSheet('identity'); break;
+    case 'open-privacy': if (state.authenticated) openSheet('privacy'); else { state.sheet = 'privacy'; render(); } break;
+    case 'open-identity': openSheet('identity', { name: state.creator.identity?.name || '', idNumber: '', identityEditing: !state.creator.identity }); break;
+    case 'edit-identity': state.form = { name: state.creator.identity?.name || '', idNumber: '', identityEditing: true }; render(); break;
+    case 'submit-identity': submitIdentity(); break;
+    case 'skip-onboarding': skipOnboardingStep(); break;
     case 'identity-pass': state.sheet = null; verifyIdentity('pass'); break;
     case 'identity-minor': state.sheet = null; verifyIdentity('minor'); break;
     case 'identity-invalid': state.sheet = null; verifyIdentity('invalid'); break;
@@ -369,8 +455,11 @@ function handleAction(action, target) {
     case 'sheet-code': sendCode(); break;
     case 'save-nickname': saveNickname(); break;
     case 'save-phone': savePhone(); break;
-    case 'edit-bank': openSheet('bank', state.creator.bank ? { bankName: state.creator.bank.bankName, cardNumber: '' } : {}); break;
+    case 'edit-bank': openSheet('bank', state.creator.bank ? { bankName: state.creator.bank.bankName, branchName: state.creator.bank.branchName, cardNumber: '', platformError: '' } : { bankName: '', branchName: '', cardNumber: '', platformError: '' }); break;
     case 'save-bank': saveBank(); break;
+    case 'retry-bank': state.form.platformError = ''; render(); break;
+    case 'simulate-bank-error': setBankError(target.dataset.bankError); break;
+    case 'reset-identity-from-bank': resetIdentityFromBank(); break;
     case 'open-withdrawal': state.activeView = 'withdrawal'; render(); break;
     case 'open-earnings-rules': openSheet('earningsRules'); break;
     case 'open-earnings-history': openSheet('earningsHistory'); break;
@@ -384,8 +473,8 @@ function handleAction(action, target) {
     case 'set-history-range': state.historyRange = target.dataset.historyRange; render(); break;
     case 'app-hint': setToast('info', '请打开天天学 App', '进入「我的 · 个人中心」即可上传和管理作品'); break;
     case 'ranking': setToast('info', '大赛排名', 'Demo 中展示当前赛道第 18 名、全局第 126 名'); break;
-    case 'logout': state.authenticated = false; state.authMode = 'login'; state.authForm = { phone: '', code: '', nickname: '', agreed: false }; state.codeSent = false; state.sheet = null; state.postLoginPendingIdentity = false; render(); setToast('info', '已退出登录', '再次登录会根据当前实名认证状态进入对应页面'); break;
-    case 'close-sheet': closeSheet(); break;
+    case 'logout': state.authenticated = false; state.authForm = { phone: '', code: '', agreed: false }; state.codeSent = false; state.sheet = null; state.form = {}; state.postLoginPendingIdentity = false; state.onboardingQueue = []; state.onboardingActive = false; render(); setToast('info', '已退出登录', '再次登录会根据当前实名和银行卡状态继续校验'); break;
+    case 'close-sheet': state.onboardingActive ? skipOnboardingStep() : closeSheet(); break;
     default: break;
   }
 }
@@ -399,10 +488,11 @@ document.addEventListener('click', (event) => {
 
 document.addEventListener('input', (event) => {
   if (event.target.dataset.authField) updateAuthField(event.target.dataset.authField, event.target.type === 'checkbox' ? event.target.checked : event.target.value);
-  if (event.target.dataset.sheetField) { state.form[event.target.dataset.sheetField] = event.target.value; if (state.sheet === 'withdrawal') { const amount = Number(state.form.amount || 0); const error = state.form.amount ? validateWithdraw(amount) : ''; const errorNode = document.querySelector('.error-text'); const submit = document.querySelector('[data-action="submit-withdraw"]'); const amountPreview = document.querySelector('[data-withdraw-preview="amount"]'); const netPreview = document.querySelector('[data-withdraw-preview="net"]'); if (errorNode) errorNode.textContent = error; if (amountPreview) amountPreview.textContent = money(amount); if (netPreview) netPreview.textContent = money(amount); if (submit) submit.disabled = Boolean(error || !state.form.amount); } }
+  if (event.target.dataset.sheetField) { const field = event.target.dataset.sheetField; const value = field === 'cardNumber' ? event.target.value.replace(/\s/g, '') : field === 'idNumber' ? event.target.value.replace(/\s/g, '').toUpperCase() : event.target.value; event.target.value = value; state.form[field] = value; if (state.sheet === 'withdrawal') { const amount = Number(state.form.amount || 0); const error = state.form.amount ? validateWithdraw(amount) : ''; const errorNode = document.querySelector('.error-text'); const submit = document.querySelector('[data-action="submit-withdraw"]'); const amountPreview = document.querySelector('[data-withdraw-preview="amount"]'); const netPreview = document.querySelector('[data-withdraw-preview="net"]'); if (errorNode) errorNode.textContent = error; if (amountPreview) amountPreview.textContent = money(amount); if (netPreview) netPreview.textContent = money(amount); if (submit) submit.disabled = Boolean(error || !state.form.amount); } }
 });
 
 document.addEventListener('change', (event) => {
+  if (event.target.dataset.sheetField) state.form[event.target.dataset.sheetField] = event.target.value;
   if (event.target.dataset.dateField) { state[event.target.dataset.dateField] = event.target.value; render(); }
   if (event.target.dataset.historyDate) { state[event.target.dataset.historyDate] = event.target.value; render(); }
 });
