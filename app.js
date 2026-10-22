@@ -185,13 +185,35 @@ function submitIdentity() {
   const idNumber = String(state.form.idNumber || '').replace(/\s/g, '').toUpperCase();
   if (!/^[^\d\s]+$/.test(name)) return setToast('error', '姓名格式不正确', '姓名不能包含数字或空格');
   if (!/^[0-9A-Z]{18}$/.test(idNumber)) return setToast('error', '身份证号格式不正确', '请输入 18 位数字或字母');
-  state.creator.identity = { name, idNumber };
-  state.creator.verified = true;
-  state.creator.isMinor = false;
-  state.creator.idStatus = 'pass';
-  setToast('success', '实名认证通过', '实名认证信息已保存，后续仅支持查看加密信息');
-  if (state.onboardingActive) nextOnboardingStep();
-  else closeSheet();
+  state.form = { name, idNumber, identityResult: 'pending' };
+  state.sheet = 'identityCheck';
+  render();
+}
+
+function finishIdentityCheck(result) {
+  const name = state.form.name;
+  const idNumber = state.form.idNumber;
+  if (result === 'pass') {
+    state.creator.identity = { name, idNumber };
+    state.creator.verified = true;
+    state.creator.isMinor = false;
+    state.creator.idStatus = 'pass';
+    setToast('success', '实名认证通过', '实名认证信息已保存，自动进入银行卡绑定');
+    if (state.onboardingActive) nextOnboardingStep();
+    else openSheet('bank', { bankName: '', branchName: '', cardNumber: '', platformError: '' });
+    return;
+  }
+  state.creator.verified = false;
+  state.creator.isMinor = result === 'minor';
+  state.creator.idStatus = result === 'minor' ? 'minor' : 'invalid';
+  state.form.identityResult = result;
+  render();
+}
+
+function backToIdentityEdit() {
+  state.sheet = 'identity';
+  state.form = { name: state.form.name || '', idNumber: state.form.idNumber || '', identityEditing: true };
+  render();
 }
 
 function saveNickname() {
@@ -398,6 +420,7 @@ function renderSheet() {
     nickname: renderNicknameSheet,
     phone: renderPhoneSheet,
     identity: renderIdentitySheet,
+    identityCheck: renderIdentityCheckSheet,
     bank: renderBankSheet,
     withdrawal: renderWithdrawSheet
   }[state.sheet];
@@ -434,6 +457,12 @@ function renderIdentitySheet() {
   const savedSummary = saved && !editing ? `<div class="identity-mask"><span><b>${maskIdentityName(saved.name)}</b><small>${maskIdentityNumber(saved.idNumber)}</small></span><em>已加密</em></div>` : `<div class="field"><label class="field-label">姓名</label><input class="field-control" maxlength="20" placeholder="请输入真实姓名" value="${esc(state.form.name || '')}" data-sheet-field="name" /></div><div class="field"><label class="field-label">身份证号</label><input class="field-control" maxlength="18" placeholder="请输入 18 位身份证号" value="${esc(state.form.idNumber || '')}" data-sheet-field="idNumber" /></div>`;
   return `${sheetHead('实名认证', '请完成身份认证，认证信息将用于作品分发、收益提现等')}<div class="sheet-note identity-guide">请完成身份认证，认证信息将用于作品分发、收益提现等。<br/><strong>未成年人需请监护人进行实名认证。</strong></div><div class="detail-lines identity-status"><div class="detail-line"><span>认证状态</span><span>${idStatusLabel()}</span></div><div class="detail-line"><span>证件类型</span><span>境内居民身份证</span></div></div>${savedSummary}<div class="sheet-note">实名认证完成后不可修改，实名信息仅可绑定到一个创作者账号中！</div><div class="sheet-actions"><button class="secondary-btn" data-action="skip-onboarding">暂时跳过</button>${editing ? '<button class="primary-btn blue" data-action="submit-identity">确认并继续</button>' : '<button class="primary-btn blue" data-action="close-sheet">完成</button>'}</div>`;
 }
+function renderIdentityCheckSheet() {
+  const result = state.form.identityResult;
+  const messages = { invalid: '身份证错误，请检查身份证信息后重新提交。', minor: '识别为未成年人，请由监护人完成实名认证。', employee: '公司规定暂不支持在职员工签约创作者并获取收入，请检查或更换实名信息。' };
+  const resultBlock = result && result !== 'pending' ? `<div class="identity-check-result error"><strong>身份校验未通过</strong><span>${messages[result]}</span></div><div class="sheet-actions"><button class="primary-btn blue" data-action="back-to-identity">返回修改身份证信息</button></div>` : `<div class="identity-check-result checking"><strong>正在进行身份信息校验</strong><span>Demo 可选择平台返回结果，模拟真实实名接口校验。</span></div><div class="identity-check-options"><button class="check-option invalid" data-action="identity-check-result" data-identity-result="invalid"><b>身份证错误</b><small>证件信息无法通过校验</small></button><button class="check-option minor" data-action="identity-check-result" data-identity-result="minor"><b>未成年人</b><small>需由监护人进行实名认证</small></button><button class="check-option employee" data-action="identity-check-result" data-identity-result="employee"><b>已在职员工</b><small>暂不支持签约创作者</small></button><button class="check-option pass" data-action="identity-check-result" data-identity-result="pass"><b>校验通过</b><small>自动进入银行卡绑定</small></button></div>`;
+  return `${sheetHead('身份信息校验', '正在校验实名信息')}<div class="sheet-note">姓名：${esc(maskIdentityName(state.form.name))}<br/>身份证号：${esc(maskIdentityNumber(state.form.idNumber))}</div>${resultBlock}`;
+}
 function renderBankSheet() {
   const platformError = { identity_invalid: '身份证错误，请检查或更换实名信息', bank_mismatch: '银行卡与实名认证信息不匹配，请更换本人银行卡', employee: '公司规定暂不支持在职员工签约创作者并获取收入，请检查或更换实名信息' }[state.form.platformError] || '';
   const bankOptions = ['中国工商银行', '中国建设银行', '中国银行', '招商银行'].map((bank) => `<option value="${bank}" ${state.form.bankName === bank ? 'selected' : ''}>${bank}</option>`).join('');
@@ -457,6 +486,8 @@ function handleAction(action, target) {
     case 'open-onboarding': startOnboarding(); break;
     case 'edit-identity': state.form = { name: state.creator.identity?.name || '', idNumber: '', identityEditing: true }; render(); break;
     case 'submit-identity': submitIdentity(); break;
+    case 'identity-check-result': finishIdentityCheck(target.dataset.identityResult); break;
+    case 'back-to-identity': backToIdentityEdit(); break;
     case 'skip-onboarding': skipOnboardingStep(); break;
     case 'identity-pass': state.sheet = null; verifyIdentity('pass'); break;
     case 'identity-minor': state.sheet = null; verifyIdentity('minor'); break;
