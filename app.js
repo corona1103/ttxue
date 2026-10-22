@@ -466,7 +466,7 @@ function handleAction(action, target) {
     case 'sheet-code': sendCode(); break;
     case 'save-nickname': saveNickname(); break;
     case 'save-phone': savePhone(); break;
-    case 'edit-bank': openSheet('bank', state.creator.bank ? { bankName: state.creator.bank.bankName, branchName: state.creator.bank.branchName, cardNumber: '', platformError: '' } : { bankName: '', branchName: '', cardNumber: '', platformError: '' }); break;
+    case 'edit-bank': if (!state.creator.verified || state.creator.isMinor || !state.creator.identity) return startOnboarding(); openSheet('bank', state.creator.bank ? { bankName: state.creator.bank.bankName, branchName: state.creator.bank.branchName, cardNumber: '', platformError: '' } : { bankName: '', branchName: '', cardNumber: '', platformError: '' }); break;
     case 'save-bank': saveBank(); break;
     case 'retry-bank': state.form.platformError = ''; render(); break;
     case 'simulate-bank-error': setBankError(target.dataset.bankError); break;
