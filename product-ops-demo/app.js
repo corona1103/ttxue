@@ -8,10 +8,10 @@ const collections = [
 ];
 
 const microCourseItems = [
-  { collectionId: "COL-202610-018", subject: "科学", category: "科学启蒙", order: 1, duration: 8, effective: "2026-10-01", exposure: 248600, clicks: 17240, status: "on" },
-  { collectionId: "COL-202610-021", subject: "心理", category: "成长心理", order: 2, duration: 10, effective: "2026-10-06", exposure: 201450, clicks: 12870, status: "on" },
-  { collectionId: "COL-202610-024", subject: "语文", category: "人文故事", order: 3, duration: 7, effective: "2026-10-13", exposure: 185390, clicks: 11940, status: "on" },
-  { collectionId: "COL-202610-031", subject: "艺术", category: "创意表达", order: 4, duration: 12, effective: "2026-10-20", exposure: 130220, clicks: 7480, status: "on" }
+  { collectionId: "COL-202610-018", subject: "科学", category: "科学启蒙", order: 1, effective: "2026-10-01", exposure: 248600, clicks: 17240, status: "on" },
+  { collectionId: "COL-202610-021", subject: "心理", category: "成长心理", order: 2, effective: "2026-10-06", exposure: 201450, clicks: 12870, status: "on" },
+  { collectionId: "COL-202610-024", subject: "语文", category: "人文故事", order: 3, effective: "2026-10-13", exposure: 185390, clicks: 11940, status: "on" },
+  { collectionId: "COL-202610-031", subject: "艺术", category: "创意表达", order: 4, effective: "2026-10-20", exposure: 130220, clicks: 7480, status: "on" }
 ];
 
 const incomeRows = [
@@ -221,10 +221,6 @@ function handleInput(event) {
 function handleChange(event) {
   const target = event.target;
   if (target.matches("[data-filter]")) { state.filters[target.dataset.filter] = target.value; render(); return; }
-  if (target.matches('[data-action="edit-duration"]')) {
-    const item = microCourseItems.find((entry) => entry.collectionId === target.dataset.id);
-    if (item) { item.duration = Number(target.value); toast(`已将「${collectionById(item.collectionId).title}」轮换时长调整为 ${item.duration} 秒`); }
-  }
 }
 
 function handleSubmit(event) {
@@ -261,7 +257,7 @@ function handleSubmit(event) {
   if (!collectionId || !subject || !category || !order) { toast("请完整填写必填项", "error"); return; }
   const existing = microCourseItems.find((item) => item.collectionId === collectionId);
   if (existing && existing.status === "on") { toast("该合集已在微课 Tab 中", "error"); return; }
-  const item = { collectionId, subject, category, order, duration: existing?.duration || 8, effective: data.get("effective") || "2026-10-28", exposure: existing?.exposure || 0, clicks: existing?.clicks || 0, status: "on" };
+  const item = { collectionId, subject, category, order, effective: data.get("effective") || "2026-10-28", exposure: existing?.exposure || 0, clicks: existing?.clicks || 0, status: "on" };
   if (existing) Object.assign(existing, item); else microCourseItems.push(item);
   microCourseItems.sort((a, b) => a.order - b.order).forEach((entry, index) => { entry.order = index + 1; });
   closeAllOverlays(); render(); toast("精选内容已加入微课 Tab");
@@ -313,7 +309,7 @@ function toggleMicroAssociation(collectionId) {
     existing.status = "on";
     existing.order = microCourseItems.filter((item) => item.status === "on").length;
   } else {
-    microCourseItems.push({ collectionId, category: "待配置", order: microCourseItems.filter((item) => item.status === "on").length + 1, duration: 8, effective: "2026-10-28", exposure: 0, clicks: 0, status: "on" });
+    microCourseItems.push({ collectionId, subject: "待配置", category: "待配置", order: microCourseItems.filter((item) => item.status === "on").length + 1, effective: "2026-10-28", exposure: 0, clicks: 0, status: "on" });
   }
   render();
   toast(`已将「${collection.title}」加入微课 Tab`);
