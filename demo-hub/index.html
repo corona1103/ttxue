@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f5f7fb" />
+  <title>ttx产品demo汇总</title>
+  <style>
+    :root { --ink:#172033; --muted:#7b8498; --line:#e7eaf1; --soft:#f5f7fb; --blue:#5962e8; --blue-soft:#eef0ff; --cyan:#1ca7a0; --orange:#f09a58; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:linear-gradient(180deg,#f7f8fc 0,#eef1f8 100%); font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif; }
+    a { color:inherit; text-decoration:none; }
+    .shell { width:min(1180px,calc(100% - 40px)); margin:0 auto; }
+    .topbar { height:72px; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .brand-mark { width:40px; height:40px; display:grid; place-items:center; border-radius:13px; color:#fff; background:linear-gradient(145deg,#6d72ed,#4d53c8); font-size:21px; font-weight:800; box-shadow:0 10px 24px #6268df35; }
+    .brand strong { display:block; font-size:15px; letter-spacing:.02em; }
+    .brand span { display:block; margin-top:2px; color:var(--muted); font-size:10px; letter-spacing:.12em; text-transform:uppercase; }
+    .top-link { padding:9px 13px; border:1px solid var(--line); border-radius:10px; color:#606a80; background:#fff; font-size:11px; transition:.2s; }
+    .top-link:hover { border-color:#b9bdf4; color:var(--blue); transform:translateY(-1px); }
+    .hero { padding:54px 0 30px; }
+    .eyebrow { color:var(--blue); font-size:11px; font-weight:800; letter-spacing:.16em; }
+    h1 { margin:12px 0 13px; font-size:clamp(32px,5vw,54px); line-height:1.08; letter-spacing:-.055em; }
+    .hero p { max-width:600px; margin:0; color:var(--muted); font-size:14px; line-height:1.8; }
+    .stats { display:flex; flex-wrap:wrap; gap:10px; margin-top:25px; }
+    .stat { min-width:125px; padding:12px 14px; border:1px solid var(--line); border-radius:13px; background:#fff; }
+    .stat b { display:block; font-size:20px; line-height:1; }
+    .stat span { display:block; margin-top:6px; color:var(--muted); font-size:10px; }
+    .toolbar { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 0; background:#f5f7fbdd; backdrop-filter:blur(14px); }
+    .tabs { display:flex; gap:7px; flex-wrap:wrap; }
+    .tab { border:1px solid var(--line); border-radius:999px; padding:8px 14px; color:#69738a; background:#fff; font-size:11px; cursor:pointer; transition:.2s; }
+    .tab.active,.tab:hover { border-color:#b8bcf4; color:var(--blue); background:var(--blue-soft); }
+    .rule { color:var(--muted); font-size:11px; }
+    main { padding-bottom:70px; }
+    .module { margin-top:24px; scroll-margin-top:74px; }
+    .module-head { display:flex; align-items:end; justify-content:space-between; gap:15px; margin-bottom:12px; }
+    .module-title { display:flex; align-items:center; gap:9px; }
+    .module-icon { width:28px; height:28px; display:grid; place-items:center; border-radius:9px; color:#fff; background:var(--blue); font-size:12px; font-weight:800; }
+    .module:nth-of-type(2) .module-icon { background:var(--cyan); }
+    .module:nth-of-type(3) .module-icon { background:var(--orange); }
+    .module:nth-of-type(4) .module-icon { background:#8c69d8; }
+    .module h2 { margin:0; font-size:18px; letter-spacing:-.03em; }
+    .module-head p { margin:0; color:var(--muted); font-size:11px; }
+    .cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .card { position:relative; min-height:174px; display:flex; flex-direction:column; padding:18px; border:1px solid var(--line); border-radius:16px; background:#fff; box-shadow:0 7px 22px #26335a08; overflow:hidden; transition:.22s; }
+    .card:hover { transform:translateY(-3px); border-color:#c9ccf5; box-shadow:0 13px 30px #26335a12; }
+    .card.disabled { justify-content:center; align-items:center; min-height:125px; color:var(--muted); background:#fafbfe; box-shadow:none; }
+    .card.disabled:hover { transform:none; border-color:var(--line); }
+    .card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .card-symbol { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; color:var(--blue); background:var(--blue-soft); font-size:15px; font-weight:800; }
+    .card-badge { padding:5px 7px; border-radius:7px; color:#64708a; background:var(--soft); font-size:9px; }
+    .card h3 { margin:18px 0 4px; font-size:16px; letter-spacing:-.02em; }
+    .version { color:var(--blue); font-size:11px; font-weight:700; }
+    .card-desc { margin:9px 0 0; color:var(--muted); font-size:11px; line-height:1.65; }
+    .card-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top:14px; color:var(--muted); font-size:10px; }
+    .open-link { color:var(--blue); font-weight:700; }
+    .open-link:hover { text-decoration:underline; }
+    .footer { padding:24px 0 42px; border-top:1px solid var(--line); color:var(--muted); font-size:10px; }
+    @media (max-width:800px) { .cards { grid-template-columns:repeat(2,minmax(0,1fr)); } .toolbar { display:block; } .rule { margin-top:10px; } }
+    @media (max-width:520px) { .shell { width:min(100% - 28px,460px); } .topbar { height:64px; } .top-link { display:none; } .hero { padding-top:39px; } .cards { grid-template-columns:1fr; } .module-head { display:block; } .module-head p { margin-top:5px; } .card { min-height:160px; } }
+  </style>
+</head>
+<body>
+  <header class="shell topbar">
+    <a class="brand" href="#top" aria-label="返回顶部"><span class="brand-mark">天</span><span><strong>ttx产品demo汇总</strong><span>TIANTIANXUE PRODUCT DEMOS</span></span></a>
+    <a class="top-link" href="https://github.com/corona1103/ttxue" target="_blank" rel="noreferrer">查看项目仓库 ↗</a>
+  </header>
+
+  <main id="top" class="shell">
+    <section class="hero">
+      <div class="eyebrow">PRODUCT DEMO LIBRARY</div>
+      <h1>所有产品 Demo，<br>从这里开始。</h1>
+      <p>按 App、创作者、赛事、后台四个模块统一收录，使用「标题 · 版本号」标记每次评审版本，方便快速进入对应体验。</p>
+      <div class="stats"><div class="stat"><b>4</b><span>产品模块</span></div><div class="stat"><b>2</b><span>当前可体验 Demo</span></div><div class="stat"><b>2026.11</b><span>最近更新</span></div></div>
+    </section>
+
+    <div class="toolbar"><nav class="tabs" aria-label="模块筛选"><button class="tab active" data-filter="all">全部</button><button class="tab" data-filter="app">App</button><button class="tab" data-filter="creator">创作者</button><button class="tab" data-filter="event">赛事</button><button class="tab" data-filter="admin">后台</button></nav><span class="rule">命名规则：标题 · 版本号</span></div>
+
+    <section class="module" data-module="app"><div class="module-head"><div class="module-title"><span class="module-icon">A</span><h2>App</h2></div><p>天天学 App 及移动端产品</p></div><div class="cards"><article class="card disabled"><strong>暂无 Demo</strong><span style="margin-top:5px;font-size:10px">后续版本将在这里汇总</span></article></div></section>
+
+    <section class="module" data-module="creator"><div class="module-head"><div class="module-title"><span class="module-icon">创</span><h2>创作者</h2></div><p>创作者中心与作者侧工具</p></div><div class="cards"><article class="card"><div class="card-top"><span class="card-symbol">✦</span><span class="card-badge">H5 · 移动端</span></div><h3>创作者中心 · 1030</h3><span class="version">版本 1030</span><p class="card-desc">登录注册、实名认证、银行卡绑定、数据中心与提现流程体验。</p><div class="card-foot"><span>可直接体验</span><a class="open-link" href="../" target="_blank">打开 Demo ↗</a></div></article></div></section>
+
+    <section class="module" data-module="event"><div class="module-head"><div class="module-title"><span class="module-icon">赛</span><h2>赛事</h2></div><p>赛事活动、报名与榜单产品</p></div><div class="cards"><article class="card disabled"><strong>暂无 Demo</strong><span style="margin-top:5px;font-size:10px">后续赛事产品将在这里汇总</span></article></div></section>
+
+    <section class="module" data-module="admin"><div class="module-head"><div class="module-title"><span class="module-icon">后</span><h2>后台</h2></div><p>运营、财务与内容管理后台</p></div><div class="cards"><article class="card"><div class="card-top"><span class="card-symbol">▤</span><span class="card-badge">Web · 桌面端</span></div><h3>运营后台 · 1117</h3><span class="version">版本 1117</span><p class="card-desc">合集管理、微课 Tab 运营、创作者收入和结算对账流程体验。</p><div class="card-foot"><span>可直接体验</span><a class="open-link" href="../product-ops-demo/" target="_blank">打开 Demo ↗</a></div></article></div></section>
+  </main>
+
+  <footer class="footer"><div class="shell">ttx产品demo汇总 · 持续收录天天学产品评审版本</div></footer>
+  <script>
+    const tabs = [...document.querySelectorAll('[data-filter]')];
+    const modules = [...document.querySelectorAll('[data-module]')];
+    tabs.forEach((tab) => tab.addEventListener('click', () => {
+      const filter = tab.dataset.filter;
+      tabs.forEach((item) => item.classList.toggle('active', item === tab));
+      modules.forEach((module) => { module.hidden = filter !== 'all' && module.dataset.module !== filter; });
+    }));
+  </script>
+</body>
+</html>
