@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>天天学 · 内容运营后台</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="brand-mark">天</div>
+          <div>
+            <strong>天天学</strong>
+            <span>内容运营后台</span>
+          </div>
+        </div>
+        <div class="workspace-pill"><span class="status-dot"></span> 运营工作区</div>
+        <nav class="nav" aria-label="主导航">
+          <a class="nav-item" href="#/dashboard" data-route="dashboard"><span class="nav-icon">⌂</span><span>工作台</span></a>
+          <div class="nav-group">
+            <div class="nav-group-title"><span class="nav-icon">▣</span><span>视频管理</span><span class="nav-chevron">⌄</span></div>
+            <a class="nav-item" href="#/collections" data-route="collections"><span class="nav-icon">▤</span><span>合集管理</span></a>
+          </div>
+          <div class="nav-group">
+            <div class="nav-group-title"><span class="nav-icon">✦</span><span>产品运营</span><span class="nav-chevron">⌄</span></div>
+            <a class="nav-item" href="#/micro-course" data-route="micro-course"><span class="nav-icon">◈</span><span>微课 Tab 运营</span><span class="nav-badge">运营</span></a>
+          </div>
+          <div class="nav-group">
+            <div class="nav-group-title"><span class="nav-icon">◫</span><span>财务管理</span><span class="nav-chevron">⌄</span></div>
+            <a class="nav-item" href="#/creator-income" data-route="creator-income"><span class="nav-icon">◉</span><span>创作者收入</span></a>
+            <a class="nav-item" href="#/settlements" data-route="settlements"><span class="nav-icon">◎</span><span>结算对账</span></a>
+          </div>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="help-card"><span class="help-icon">?</span><div><strong>需要帮助？</strong><span>查看运营手册</span></div><span class="arrow">→</span></div>
+          <div class="user-mini"><div class="avatar">林</div><div><strong>林晓运营</strong><span>内容运营</span></div><span class="more">•••</span></div>
+        </div>
+      </aside>
+
+      <main class="main-shell">
+        <header class="topbar">
+          <div class="breadcrumb" id="breadcrumb">工作台 <span>/</span> 总览</div>
+          <div class="top-actions">
+            <span class="updated"><span class="live-dot"></span>数据更新于 10:32</span>
+            <button class="icon-button" type="button" title="消息">♢<span class="notify-dot"></span></button>
+            <div class="top-user"><div class="avatar avatar-small">林</div><span>林晓</span><span class="chevron">⌄</span></div>
+          </div>
+        </header>
+        <section class="content" id="app" aria-live="polite"></section>
+      </main>
+    </div>
+
+    <div class="overlay hidden" id="overlay"></div>
+    <aside class="drawer hidden" id="drawer" aria-label="详情抽屉"></aside>
+    <div class="modal-wrap hidden" id="modal-wrap" role="dialog" aria-modal="true"></div>
+    <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
