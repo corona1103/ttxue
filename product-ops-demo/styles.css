@@ -259,9 +259,11 @@ tbody tr:hover { background: #fcfcff; }
 .income-detail-row span { color: var(--subtle); font-size: 10px; margin-top: 2px; }
 .income-detail-values { display: flex; gap: 11px; white-space: nowrap; }
 .income-detail-values b { color: #59647a; font-weight: 650; margin-left: 2px; }
-.settlement-author-head, .settlement-author-row { display: grid; grid-template-columns: minmax(150px, 1.6fr) .55fr .85fr .85fr .7fr; gap: 8px; align-items: center; }
+.settlement-author-head, .settlement-author-row { display: grid; grid-template-columns: minmax(105px, 1.1fr) minmax(82px, .9fr) minmax(145px, 1.35fr) minmax(90px, .9fr) minmax(90px, .9fr); gap: 8px; align-items: center; }
 .settlement-author-head { color: var(--subtle); font-size: 10px; padding: 0 11px 7px; }
 .settlement-author-row { padding: 10px 11px; border: 1px solid var(--line); border-radius: 9px; }
+.settlement-author-row strong { color: var(--text); font-size: 11px; }
+.settlement-realname { display: flex; flex-direction: column; gap: 3px; color: var(--muted); font-size: 10px; line-height: 1.2; }
 .refund-value { color: var(--red); }
 
 .overlay { position: fixed; inset: 0; background: rgba(31, 37, 60, .32); z-index: 20; animation: fade-in .2s ease; }
@@ -338,6 +340,6 @@ tbody tr:hover { background: #fcfcff; }
   .detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .income-detail-row { display: block; }
   .income-detail-values { margin-top: 8px; flex-wrap: wrap; gap: 7px 12px; }
-  .settlement-author-head, .settlement-author-row { grid-template-columns: minmax(125px, 1.4fr) .5fr .8fr .8fr .7fr; font-size: 10px; }
+  .settlement-author-head, .settlement-author-row { grid-template-columns: minmax(92px, 1fr) minmax(75px, .8fr) minmax(120px, 1.2fr) minmax(82px, .8fr) minmax(82px, .8fr); font-size: 10px; }
   .top-user > span:not(.chevron) { display: none; }
 }
