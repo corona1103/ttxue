@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>内容审核平台 · ttx Demo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">T</span><span>天天学后台</span></div>
+      <div class="workspace-label">内容治理</div>
+      <nav class="side-nav" aria-label="审核平台导航">
+        <button class="nav-item is-active" data-view="queue" type="button"><span class="nav-icon">▤</span><span>审核队列</span><span class="nav-count" id="queueCount">4</span></button>
+        <button class="nav-item" data-view="logs" type="button"><span class="nav-icon">◷</span><span>操作记录</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-avatar">张</div>
+        <div><strong>张审核</strong><small>审核管理员</small></div>
+        <span class="online-dot"></span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <section class="view is-visible" id="queueView" aria-labelledby="queueTitle">
+        <header class="page-header">
+          <div>
+            <div class="eyebrow">CONTENT REVIEW</div>
+            <h1 id="queueTitle">审核队列</h1>
+            <p>筛选并处理已提交的视频作品，AI 结果仅作辅助参考。</p>
+          </div>
+          <div class="header-actions"><span class="sync-dot"></span>数据已同步 <span class="header-time">刚刚</span></div>
+        </header>
+
+        <div class="queue-layout">
+          <section class="queue-left panel">
+            <div class="filter-title"><div><strong>全部内容</strong><span class="result-count" id="resultCount">4 条</span></div><button class="link-button" id="clearFilters" type="button">清除</button></div>
+            <div class="filter-grid">
+              <label>业务线<select id="businessFilter"><option value="">全部业务线</option><option>短视频大赛</option><option>创作者中心</option></select></label>
+              <label>生产方<select id="producerFilter"><option value="">全部生产方</option><option>个人创作者</option><option>机构账号</option><option>官方账号</option></select></label>
+              <label class="change-highlight-field">作者昵称<input id="authorNameFilter" type="search" placeholder="输入作者昵称" /></label>
+              <label class="change-highlight-field">作者 ID<input id="authorIdFilter" type="search" placeholder="输入作者 ID" /></label>
+              <label class="field-full">关键词<input id="keywordFilter" type="search" placeholder="搜索标题、视频 ID..." /></label>
+              <label>提交日期<input id="dateFilter" type="date" /></label>
+              <label>状态<select id="statusFilter"><option value="">全部状态</option><option value="pending">待审核</option><option value="approved">已通过</option><option value="rejected">已驳回</option></select></label>
+              <label>审核人<select id="reviewerFilter"><option value="">全部审核人</option><option>张审核</option><option>李安全</option></select></label>
+              <label>排序<select id="sortFilter"><option value="latest">最新提交优先</option><option value="oldest">最早提交优先</option></select></label>
+              <div class="tag-filter-group field-full change-highlight-panel"><span class="filter-label">机器审核结果</span><div class="multi-select" id="machineTagSelect"><button class="multi-select-trigger" id="machineTagTrigger" type="button" aria-expanded="false">选择机审、风控或驳回理由 <span>⌄</span></button><div class="multi-select-menu" id="machineTagMenu" hidden><div class="option-group"><strong>机审</strong><label><input type="checkbox" name="machineTagFilter" value="集团机审:通过" />通过</label><label><input type="checkbox" name="machineTagFilter" value="集团机审:风险" />风险</label></div><div class="option-group"><strong>风控</strong><label><input type="checkbox" name="machineTagFilter" value="安全风控:通过" />通过</label><label><input type="checkbox" name="machineTagFilter" value="安全风控:需关注" />需关注</label></div><div class="option-group"><strong>驳回理由</strong><label><input type="checkbox" name="machineTagFilter" value="人工驳回说明:有" />人工驳回说明</label><label><input type="checkbox" name="machineTagFilter" value="P0:政治敏感" />P0 · 政治敏感</label><label><input type="checkbox" name="machineTagFilter" value="P0:未成年人不良导向" />P0 · 未成年人不良导向</label><label><input type="checkbox" name="machineTagFilter" value="P1:名著魔改" />P1 · 名著魔改</label><label><input type="checkbox" name="machineTagFilter" value="P1:版权风险" />P1 · 版权风险</label><label><input type="checkbox" name="machineTagFilter" value="P1:色情低俗" />P1 · 色情低俗</label><label><input type="checkbox" name="machineTagFilter" value="P1:知识明显错误" />P1 · 知识明显错误</label><label><input type="checkbox" name="machineTagFilter" value="P1:无知识性" />P1 · 无知识性</label><label><input type="checkbox" name="machineTagFilter" value="P2:血腥恐怖" />P2 · 血腥恐怖</label><label><input type="checkbox" name="machineTagFilter" value="P2:广告导流" />P2 · 广告导流</label><label><input type="checkbox" name="machineTagFilter" value="P3:中低风险" />P3 · 中低风险</label><label><input type="checkbox" name="machineTagFilter" value="P3:其他" />P3 · 其他</label><label><input type="checkbox" name="machineTagFilter" value="P3:自定义" />P3 · 自定义</label></div></div></div></div>
+              <div class="tag-filter-group field-full change-highlight-panel"><span class="filter-label">特殊标识</span><div class="check-chip-list"><label class="check-chip"><input type="checkbox" name="specialTagFilter" value="存疑" />存疑</label><label class="check-chip"><input type="checkbox" name="specialTagFilter" value="高危" />高危</label><label class="check-chip"><input type="checkbox" name="specialTagFilter" value="提醒" />提醒</label><label class="check-chip"><input type="checkbox" name="specialTagFilter" value="待关注" />待关注</label><label class="check-chip"><input type="checkbox" name="specialTagFilter" value="优质" />优质</label></div></div>
+            </div>
+            <button class="primary-button filter-submit" id="applyFilters" type="button">筛选内容</button>
+            <div class="list-divider"></div>
+            <div class="batch-toolbar change-highlight-panel" id="batchToolbar"><label class="select-all"><input id="selectAllVideos" type="checkbox" />全选当前结果</label><span id="selectedSummary">已选 0 条</span><button class="batch-button" id="openBatchAction" type="button" disabled>批量操作</button></div>
+            <div class="video-list" id="videoList" aria-live="polite"></div>
+          </section>
+
+          <section class="preview-column">
+            <div class="video-stage panel" id="videoStage"></div>
+            <div class="preview-meta"><span>视频预览 · 固定占位画面</span><button class="ghost-button" type="button">打开详情 ↗</button></div>
+          </section>
+
+          <aside class="insight-column" id="insightColumn"></aside>
+        </div>
+      </section>
+
+      <section class="view" id="logsView" aria-labelledby="logsTitle">
+        <header class="page-header logs-header">
+          <div><div class="eyebrow">AUDIT TRAIL</div><h1 id="logsTitle">操作记录</h1><p>每一次决定都有依据，每一次变更都有记录。</p></div>
+          <div class="trace-badge"><span>♢</span> 全程留痕</div>
+        </header>
+        <section class="logs-panel panel">
+          <div class="logs-summary"><div><strong>全部视频</strong><span class="summary-count" id="logCount">0</span></div><span class="priority-label">按视频汇总 · 最近操作优先</span></div>
+          <div class="logs-filters">
+            <label>操作类型<select id="logTypeFilter"><option value="">全部类型</option><option value="登录">登录</option><option value="视频审核">视频审核</option><option value="改判">改判</option></select></label>
+            <label>操作人工号<input id="operatorFilter" type="search" placeholder="输入完整工号" /></label>
+            <label>目标编号<input id="targetFilter" type="search" placeholder="视频 ID 或员工号" /></label>
+            <button class="primary-button" id="applyLogFilters" type="button">筛选记录</button>
+            <button class="text-button" id="resetLogFilters" type="button">重置</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>视频作品</th><th class="change-highlight">最终审核结果</th><th class="change-highlight">操作记录（最近两条）</th><th class="change-highlight">审核说明</th><th>改判次数</th><th>最近操作时间</th></tr></thead>
+              <tbody id="logsBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <div class="modal-backdrop" id="batchModal" hidden>
+    <section class="batch-modal change-highlight-panel" role="dialog" aria-modal="true" aria-labelledby="batchModalTitle">
+      <div class="modal-head"><div><span class="eyebrow">BATCH REVIEW</span><h2 id="batchModalTitle">批量操作</h2></div><button class="modal-close" id="closeBatchModal" type="button">×</button></div>
+      <p class="batch-description" id="batchDescription"></p>
+      <div id="batchStepForm"><label class="modal-label">选择批量动作<select id="batchAction"><option value="approve">批量通过</option><option value="reject">批量驳回</option></select></label><div id="batchReasonFields" hidden><label class="modal-label">批量驳回理由标签<select id="batchReasonPreset"><option value="">请选择理由标签</option><option value="存在外部平台水印">存在外部平台水印</option><option value="内容与标题不符">内容与标题不符</option><option value="疑似重复投稿">疑似重复投稿</option><option value="素材版权信息不完整">素材版权信息不完整</option></select></label><label class="modal-label">补充说明（可选）<input id="batchReasonInput" type="text" placeholder="补充本次批量驳回的说明" /></label></div><button class="primary-button modal-next" id="batchNext" type="button">下一步</button></div>
+      <div id="batchStepConfirm" hidden><div class="confirm-callout"><span>!</span><div><strong>请确认批量操作</strong><p id="batchConfirmText"></p></div></div><div class="modal-actions"><button class="ghost-button" id="batchBack" type="button">返回修改</button><button class="danger-button" id="batchConfirm" type="button">确认执行</button></div></div>
+    </section>
+  </div>
+  <div class="modal-backdrop" id="logDetailModal" hidden>
+    <section class="log-detail-modal change-highlight-panel" role="dialog" aria-modal="true" aria-labelledby="logDetailTitle">
+      <div class="modal-head"><div><span class="eyebrow">FULL AUDIT LOG</span><h2 id="logDetailTitle">完整操作记录</h2><p class="log-detail-target" id="logDetailTarget"></p></div><button class="modal-close" id="closeLogDetail" type="button">×</button></div>
+      <div class="log-detail-list" id="logDetailList"></div>
+      <div class="log-pagination"><span id="logPageSummary"></span><div><button class="ghost-button" id="logPrevPage" type="button">上一页</button><button class="ghost-button" id="logNextPage" type="button">下一页</button></div></div>
+    </section>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
