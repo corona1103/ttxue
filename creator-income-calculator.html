@@ -356,16 +356,11 @@
       const hitClickRate = p.hitClickRate / 100;
       const hitClickToOrderRate = p.hitClickToOrderRate / 100;
       const hitRate = hitClickRate * hitClickToOrderRate;
-      const purchaseRateMultiplier = hitRate / normalRate;
       const hitFirstDayExposure = dailyHitOrders / hitRate;
       const hitLifetimeExposure = hitLifetimeOrders / hitRate;
-      const normalFirstDayOrdersAtSameExposure = dailyHitOrders / purchaseRateMultiplier;
-      const normalLifetimeOrders = hitLifetimeOrders / purchaseRateMultiplier;
       const normalPoolExposure = normalDailyOrderPool / normalRate;
       const hitGMV = hitLifetimeOrders * p.orderValue;
-      const normalGMV = normalLifetimeOrders * p.orderValue;
       const creatorIncomePerHit = hitGMV * p.creatorShare / 100;
-      const creatorIncomePerNormal = normalGMV * p.creatorShare / 100;
       const annualCreatorIncome = p.monthlyIncome * 12;
       const hitWorks = Math.ceil(newHitFirstDayOrderPool * 365 / dailyHitOrders);
       const totalWorks = Math.ceil(hitWorks / (p.successRate / 100));
@@ -376,6 +371,10 @@
       const ordinaryPoolWorks = totalWorks - coreWorks;
       const coreOrdinaryWorks = coreWorks - coreHitWorks;
       const ordinaryPoolOrdinaryWorks = ordinaryPoolWorks - ordinaryHitWorks;
+      const ordinaryAnnualOrders = normalDailyOrderPool * 365;
+      const normalOrdersPerWork = ordinaryWorks ? ordinaryAnnualOrders / ordinaryWorks : 0;
+      const normalGMV = normalOrdersPerWork * p.orderValue;
+      const creatorIncomePerNormal = normalGMV * p.creatorShare / 100;
       const hitsPerHeadCreator = annualCreatorIncome / creatorIncomePerHit;
       const worksPerHeadCreator = hitsPerHeadCreator / (p.successRate / 100);
       const headCandidateInterval = 365 / worksPerHeadCreator;
@@ -386,8 +385,7 @@
       const annualCreatorIncomeTotal = hitWorks * creatorIncomePerHit + ordinaryWorks * creatorIncomePerNormal;
       const coreIncomeTotal = coreHitWorks * creatorIncomePerHit + coreOrdinaryWorks * creatorIncomePerNormal;
       const ordinaryIncomeTotal = ordinaryHitWorks * creatorIncomePerHit + ordinaryPoolOrdinaryWorks * creatorIncomePerNormal;
-      const exposureMultiplierVsOld = 0.0006 / normalRate;
-      return { ratio, dailyOrders, platformDailyOrders, dailyHitOrders, hitLifetimeOrders, lifetimeFactor, normalDailyOrderPool, hitDailyOrderPool, newHitFirstDayOrderPool, historicalHitOrderPool, newHitOrderShare, historicalHitOrderShare, normalClickRate, clickToOrderRate, normalRate, hitClickRate, hitClickToOrderRate, hitRate, purchaseRateMultiplier, normalLifetimeOrders, hitFirstDayExposure, hitLifetimeExposure, normalFirstDayOrdersAtSameExposure, normalPoolExposure, hitGMV, normalGMV, creatorIncomePerHit, creatorIncomePerNormal, hitWorks, totalWorks, ordinaryWorks, coreHitWorks, ordinaryHitWorks, coreWorks, ordinaryPoolWorks, coreOrdinaryWorks, ordinaryPoolOrdinaryWorks, hitsPerHeadCreator, worksPerHeadCreator, headCandidateInterval, headCreators, totalCreators, ordinaryCreators, ordinaryWorksPerCreator, annualCreatorIncomeTotal, coreIncomeTotal, ordinaryIncomeTotal, exposureMultiplierVsOld };
+      return { ratio, dailyOrders, platformDailyOrders, dailyHitOrders, hitLifetimeOrders, lifetimeFactor, normalDailyOrderPool, hitDailyOrderPool, newHitFirstDayOrderPool, historicalHitOrderPool, newHitOrderShare, historicalHitOrderShare, normalClickRate, clickToOrderRate, normalRate, hitClickRate, hitClickToOrderRate, hitRate, normalOrdersPerWork, ordinaryAnnualOrders, hitFirstDayExposure, hitLifetimeExposure, normalPoolExposure, hitGMV, normalGMV, creatorIncomePerHit, creatorIncomePerNormal, hitWorks, totalWorks, ordinaryWorks, coreHitWorks, ordinaryHitWorks, coreWorks, ordinaryPoolWorks, coreOrdinaryWorks, ordinaryPoolOrdinaryWorks, hitsPerHeadCreator, worksPerHeadCreator, headCandidateInterval, headCreators, totalCreators, ordinaryCreators, ordinaryWorksPerCreator, annualCreatorIncomeTotal, coreIncomeTotal, ordinaryIncomeTotal };
     }
 
     function tip(detail) {
@@ -415,7 +413,7 @@
         card("单部爆款首日订单基准", `${fmt(c.dailyHitOrders)}单`, "平台整体订单 ×（1－普通作品订单占比）", `单部爆款首日订单基准 = 平台整体订单 ×（1－普通作品订单占比） = ${fmt(c.platformDailyOrders)} ×（1－${pct(p.normalOrderShare)}） = ${fmt(c.dailyHitOrders)}单；单部生命周期订单 = ${fmt(c.dailyHitOrders)} × 生命周期因子${fmt(c.lifetimeFactor, 3)} = ${fmt(c.hitLifetimeOrders)}单`),
         card("爆款生命周期订单", `${fmt(c.hitLifetimeOrders)}单`, `${p.lifecycleDays}天 · 末日为首日${ratioText(p.endRatio)}`, `指数衰减公比 = ${ratioText(c.ratio * 100)}；生命周期订单 = ${fmt(c.dailyHitOrders)} × Σ(${ratioText(c.ratio * 100)}^i)，共${p.lifecycleDays}天`, "accent"),
         card("单部爆款创作者收益", money(c.creatorIncomePerHit), `生命周期GMV ${money(c.hitGMV)} · 分成${pct(p.creatorShare)}`, `爆款创作者收益 = 生命周期订单 × 客单价 × 分成 = ${fmt(c.hitLifetimeOrders)} × ${money(p.orderValue)} × ${pct(p.creatorShare)} = ${money(c.creatorIncomePerHit)}`, "primary"),
-        card("单部普通作品创作者收益", money(c.creatorIncomePerNormal), `同一曝光基准下约为爆款1/${fmt(c.purchaseRateMultiplier, 1)}`, `普通作品在同一曝光基准下订单为爆款的1/${fmt(c.purchaseRateMultiplier, 1)}，即${fmt(c.normalLifetimeOrders)}单；收益 = ${fmt(c.normalLifetimeOrders)} × ${money(p.orderValue)} × ${pct(p.creatorShare)} = ${money(c.creatorIncomePerNormal)}`, "accent"),
+        card("单部普通作品创作者收益", money(c.creatorIncomePerNormal), `普通作品全年订单池分摊 · 平均${fmt(c.normalOrdersPerWork, 0)}单/年`, `普通作品全年订单池 = ${fmt(c.normalDailyOrderPool)}单/日 × 365 = ${fmt(c.ordinaryAnnualOrders)}单；平均每部普通作品订单 = ${fmt(c.ordinaryAnnualOrders)} ÷ ${c.ordinaryWorks}部 = ${fmt(c.normalOrdersPerWork, 0)}单/年；创作者收益 = ${fmt(c.normalOrdersPerWork, 0)} × ${money(p.orderValue)} × ${pct(p.creatorShare)} = ${money(c.creatorIncomePerNormal)}`, "accent"),
       ].join("");
 
       $("orderMix").innerHTML = [
