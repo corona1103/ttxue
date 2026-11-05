@@ -58,6 +58,7 @@
     .score-bars{gap:10px}.bar-track{background:#e8eff5}.bar-fill{background:#e08a2e}.bar-fill.blue{background:#1d78c8}.bar-row em{color:#b76512}.score-footer{border-color:#e3ebf2}.score-footer strong{color:#1d78c8}
     .bar-row{grid-template-columns:76px 1fr 108px}.bar-row em{white-space:nowrap;font-size:10px}
     .score-footer{position:relative;left:auto;right:auto;bottom:auto;margin-top:24px}
+    .prize-ladder[data-public-summary]{grid-template-columns:repeat(3,1fr)}
     .section{padding:66px 0}.section-head{margin-bottom:22px}.section-head h2{color:#17263a}.section-head p{font-size:12px}
     .objective{min-height:145px;padding:20px}.objective:after{background:#edf5fb}.objective h3{margin:14px 0 5px;font-size:16px}.objective p{color:#6b7c90}
     .track.flow,.track.sales{background:#fff!important}.track:before{background:#edf5fb}.track.sales:before{background:#fff5e8}.track-kicker{color:#1d78c8}.sales .track-kicker{color:#e08a2e}.track-chip{color:#1d78c8;background:#edf5fb;border-color:#cfe4f4}.sales .track-chip{color:#b76512;background:#fff5e8;border-color:#f0d7b1}.track-metrics div,.prize-row,.value-award-grid div{background:#f5f8fb}.track-metrics b{color:#17263a}.track-metrics span,.track-foot{color:#718399}.track-foot{border-color:#e3ebf2}.track-foot a{color:#1d78c8}.flow .track-foot a{color:#1d78c8}
@@ -191,6 +192,9 @@
       const flowCard=$('#prizes .flow-card');
       if(flowCard){const title=flowCard.querySelector('.rule-card-head h3');if(title)title.textContent='爆款作品榜'}
       const salesCard=$('#prizes .rules-grid .rule-card:not(.flow-card)');if(salesCard){const note=salesCard.querySelector('.winner-note');if(note)note.textContent='收入型共 60 个获奖账号，同一账号只取收入分成最高的剧集计入榜单；所有入围合集正常进行日常结算分成。按实际作者分成收益直接排名；同分时按有效播放量倒序，账号内取排名最前的剧集。';const range=salesCard.querySelector('.formula strong:last-child');if(range)range.textContent='￥10,000–￥100,000'}
+      const publicPrizeSummary=(card,items)=>{const ladder=card?.querySelector('.prize-ladder');if(!ladder)return;ladder.innerHTML=items.map(([label,value])=>`<div class="prize-row"><small>${label}</small><strong>${value}</strong></div>`).join('');ladder.dataset.publicSummary='1'};
+      publicPrizeSummary($('#prizes .flow-card'),[['获奖名额','Top 50'],['奖金档位','￥1,000–￥4,000 · 若干名'],['高奖档位','￥5,000–￥10,000 · 少量名额']]);
+      publicPrizeSummary(salesCard,[['获奖名额','Top 60'],['奖金档位','￥10,000–￥30,000 · 若干名'],['高奖档位','￥35,000–￥100,000 · 少量名额']]);
       const totalBadge=$('.hero-badges .badge:last-child b');if(totalBadge)totalBadge.textContent='￥2,000,000';
       const prizeEyebrow=$('#prizes .section-head .eyebrow');if(prizeEyebrow)prizeEyebrow.textContent='PRIZE POOL · ￥2,000,000';
       const total=$('#prizes .pool-total');if(total){const amount=total.querySelector('strong');const detail=total.querySelector('span');if(amount)amount.textContent='￥2,000,000';if(detail)detail.innerHTML='流量型 100,000 元<br>收入型 1,900,000 元<br>特别价值奖不提供奖金'}
