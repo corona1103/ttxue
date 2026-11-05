@@ -223,13 +223,13 @@
             <div class="field-row"><label for="normalClickRate">普通作品曝光点击率<span class="hint">曝光进入购买页或点击购买的比例</span></label><div class="input-wrap"><input id="normalClickRate" data-key="normalClickRate" type="number" min="0.001" max="100" step="0.01" inputmode="decimal" value="0.4" /><span class="unit">%</span></div></div>
           </div>
           <div class="field">
-            <div class="field-row"><label for="clickToOrderRate">点击到支付成功率<span class="hint">购买点击最终形成支付订单的比例</span></label><div class="input-wrap"><input id="clickToOrderRate" data-key="clickToOrderRate" type="number" min="0.001" max="100" step="0.1" inputmode="decimal" value="1" /><span class="unit">%</span></div></div>
+            <div class="field-row"><label for="clickToOrderRate">点击到支付成功率<span class="hint">购买点击最终形成支付订单的比例</span></label><div class="input-wrap"><input id="clickToOrderRate" data-key="clickToOrderRate" type="number" min="0.001" max="100" step="0.1" inputmode="decimal" value="1.5" /><span class="unit">%</span></div></div>
           </div>
           <div class="field">
-            <div class="field-row"><label for="hitClickRate">爆款曝光点击率<span class="hint">默认是普通作品点击率的10倍</span></label><div class="input-wrap"><input id="hitClickRate" data-key="hitClickRate" type="number" min="0.001" max="100" step="0.01" inputmode="decimal" value="4" /><span class="unit">%</span></div></div>
+            <div class="field-row"><label for="hitClickRate">爆款曝光点击率<span class="hint">默认回显10%，可手动修改</span></label><div class="input-wrap"><input id="hitClickRate" data-key="hitClickRate" type="number" min="0.001" max="100" step="0.01" inputmode="decimal" value="10" /><span class="unit">%</span></div></div>
           </div>
           <div class="field">
-            <div class="field-row"><label for="hitClickToOrderRate">爆款点击到支付成功率<span class="hint">默认回显1.5%，可手动修改</span></label><div class="input-wrap"><input id="hitClickToOrderRate" data-key="hitClickToOrderRate" type="number" min="0.001" max="100" step="0.1" inputmode="decimal" value="1.5" /><span class="unit">%</span></div></div>
+            <div class="field-row"><label for="hitClickToOrderRate">爆款点击到支付成功率<span class="hint">默认回显3%，可手动修改</span></label><div class="input-wrap"><input id="hitClickToOrderRate" data-key="hitClickToOrderRate" type="number" min="0.001" max="100" step="0.1" inputmode="decimal" value="3" /><span class="unit">%</span></div></div>
           </div>
         </div>
       </aside>
@@ -296,9 +296,9 @@
       lifecycleDays: 7,
       endRatio: 10,
       normalClickRate: 0.4,
-      clickToOrderRate: 1,
-      hitClickRate: 4,
-      hitClickToOrderRate: 1.5
+      clickToOrderRate: 1.5,
+      hitClickRate: 10,
+      hitClickToOrderRate: 3
     };
 
     const CORE_OUTPUT_SHARE = 80;
