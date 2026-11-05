@@ -343,10 +343,10 @@
       const hitDailyOrderPool = platformDailyOrders - normalDailyOrderPool;
       const normalizedCurve = Array.from({ length: p.lifecycleDays }, (_, index) => Math.pow(ratio, index));
       const lifetimeFactor = normalizedCurve.reduce((sum, value) => sum + value, 0);
-      const dailyHitOrders = hitDailyOrderPool / lifetimeFactor;
+      const dailyHitOrders = platformDailyOrders;
       const dailyOrders = normalizedCurve.map((value) => dailyHitOrders * value);
       const hitLifetimeOrders = dailyOrders.reduce((sum, value) => sum + value, 0);
-      const newHitFirstDayOrderPool = dailyHitOrders;
+      const newHitFirstDayOrderPool = hitDailyOrderPool / lifetimeFactor;
       const historicalHitOrderPool = hitDailyOrderPool - newHitFirstDayOrderPool;
       const newHitOrderShare = newHitFirstDayOrderPool / platformDailyOrders * 100;
       const historicalHitOrderShare = historicalHitOrderPool / platformDailyOrders * 100;
@@ -367,7 +367,7 @@
       const creatorIncomePerHit = hitGMV * p.creatorShare / 100;
       const creatorIncomePerNormal = normalGMV * p.creatorShare / 100;
       const annualCreatorIncome = p.monthlyIncome * 12;
-      const hitWorks = Math.ceil(platformDailyOrders * 365 / hitLifetimeOrders);
+      const hitWorks = Math.ceil(newHitFirstDayOrderPool * 365 / dailyHitOrders);
       const totalWorks = Math.ceil(hitWorks / (p.successRate / 100));
       const ordinaryWorks = totalWorks - hitWorks;
       const coreHitWorks = Math.ceil(hitWorks * CORE_OUTPUT_SHARE / 100);
@@ -412,7 +412,7 @@
       const normalWorkShare = c.totalWorks ? c.ordinaryWorks / c.totalWorks * 100 : 0;
       $("resultCards").innerHTML = [
         card("平台整体单日订单", `${fmt(c.platformDailyOrders)}单`, `单日GMV ${money(p.dailyGMV)}`, `平台整体单日订单 = 单日GMV ÷ 客单价 = ${money(p.dailyGMV)} ÷ ${money(p.orderValue)} = ${fmt(c.platformDailyOrders)}单`, "accent"),
-        card("单部爆款首日订单基准", `${fmt(c.dailyHitOrders)}单`, "爆款订单池 ÷ 生命周期因子", `标准单部爆款首日订单 = 爆款全生命周期日订单池 ÷ 生命周期因子 = ${fmt(c.hitDailyOrderPool)} ÷ ${fmt(c.lifetimeFactor, 3)} = ${fmt(c.dailyHitOrders)}单；生命周期衰减基于这一标准爆款计算`),
+        card("单部爆款首日订单基准", `${fmt(c.dailyHitOrders)}单`, "平台整体单日订单基准", `单部爆款首日订单基准独立于平台订单结构，沿用平台整体单日订单${fmt(c.platformDailyOrders)}单；单部生命周期订单 = ${fmt(c.dailyHitOrders)} × 生命周期因子${fmt(c.lifetimeFactor, 3)} = ${fmt(c.hitLifetimeOrders)}单`),
         card("爆款生命周期订单", `${fmt(c.hitLifetimeOrders)}单`, `${p.lifecycleDays}天 · 末日为首日${ratioText(p.endRatio)}`, `指数衰减公比 = ${ratioText(c.ratio * 100)}；生命周期订单 = ${fmt(c.dailyHitOrders)} × Σ(${ratioText(c.ratio * 100)}^i)，共${p.lifecycleDays}天`, "accent"),
         card("单部爆款创作者收益", money(c.creatorIncomePerHit), `生命周期GMV ${money(c.hitGMV)} · 分成${pct(p.creatorShare)}`, `爆款创作者收益 = 生命周期订单 × 客单价 × 分成 = ${fmt(c.hitLifetimeOrders)} × ${money(p.orderValue)} × ${pct(p.creatorShare)} = ${money(c.creatorIncomePerHit)}`, "primary"),
         card("单部普通作品创作者收益", money(c.creatorIncomePerNormal), `同一曝光基准下约为爆款1/${fmt(c.purchaseRateMultiplier, 1)}`, `普通作品在同一曝光基准下订单为爆款的1/${fmt(c.purchaseRateMultiplier, 1)}，即${fmt(c.normalLifetimeOrders)}单；收益 = ${fmt(c.normalLifetimeOrders)} × ${money(p.orderValue)} × ${pct(p.creatorShare)} = ${money(c.creatorIncomePerNormal)}`, "accent"),
@@ -427,7 +427,7 @@
       $("logicWarning").innerHTML = `口径校验：若“60%”指新爆款首日订单占平台全部订单，则与当前${p.lifecycleDays}天、末日${ratioText(p.endRatio)}的指数衰减不一致；生命周期因子为 <strong>${fmt(c.lifetimeFactor, 3)}</strong>，历史衰减会达到新爆款首日的 <strong>${fmt(c.lifetimeFactor - 1, 3)}倍</strong>。本页按普通作品${pct(p.normalOrderShare)}、爆款全生命周期${pct(100 - p.normalOrderShare)}闭合计算，自动拆出新爆款首日${pct(c.newHitOrderShare)}、历史爆款衰减${pct(c.historicalHitOrderShare)}。`;
 
       $("planningGrid").innerHTML = [
-        plan("年度爆款目标", `约${fmt(c.hitWorks)}部`, `由平台整体日订单和生命周期反推`, `年度爆款目标 = ⌈平台整体单日订单 × 365 ÷ 单部生命周期订单⌉ = ⌈${fmt(c.platformDailyOrders)} × 365 ÷ ${fmt(c.hitLifetimeOrders)}⌉ = ${fmt(c.hitWorks)}部`),
+        plan("年度爆款目标", `约${fmt(c.hitWorks)}部`, `由新爆款首日订单池反推上新`, `年度爆款上新数 = ⌈新爆款首日订单池 × 365 ÷ 单部爆款首日订单基准⌉ = ⌈${fmt(c.newHitFirstDayOrderPool)} × 365 ÷ ${fmt(c.dailyHitOrders)}⌉ = ${fmt(c.hitWorks)}部；单部生命周期订单为${fmt(c.hitLifetimeOrders)}单`),
         plan("年产最终剧集总量", `约${fmt(c.totalWorks)}部`, `按爆款成功率反推候选产出`, `最终剧集总量 = ⌈年度爆款目标 ÷ 爆款成功率⌉ = ⌈${fmt(c.hitWorks)} ÷ ${fmt(p.successRate / 100, 2)}⌉ = ${fmt(c.totalWorks)}部；爆款成功率为${pct(p.successRate)}`),
         plan("头部创作者最低配置", `${c.headCreators}人`, `贡献约${c.coreWorks}部产出`, `核心产出固定为${CORE_OUTPUT_SHARE}%；核心爆款 = ${c.coreHitWorks}部，头部作者每人年成功爆款${fmt(c.hitsPerHeadCreator, 1)}部，因此头部创作者 = ⌈${c.coreHitWorks} ÷ ${fmt(c.hitsPerHeadCreator, 1)}⌉ = ${c.headCreators}人`, "recommended"),
         plan("普通创作者最低配置", `${c.ordinaryCreators}人`, `核心池占比${pct(p.corePoolShare)}`, `总创作者 = ⌈头部创作者 ÷ 核心池占比⌉ = ⌈${c.headCreators} ÷ ${pct(p.corePoolShare)}⌉ = ${c.totalCreators}人；普通创作者 = ${c.totalCreators} - ${c.headCreators} = ${c.ordinaryCreators}人`),
@@ -452,7 +452,7 @@
         const height = Math.max(6, value / c.dailyOrders[0] * 100);
         return `<div class="bar-col"><div class="bar-value" style="--bar-height:${height}%">${fmt(value)}单</div><div class="bar" style="height:${height}%"></div><div class="bar-label">第${index + 1}天</div></div>`;
       }).join("");
-      $("formula").innerHTML = `<strong>关键公式：</strong> 平台整体单日订单 = 单日GMV ÷ 客单价；普通作品有效购买率 = 普通作品曝光点击率${ratioText(c.normalClickRate * 100)} × 普通作品支付成功率${ratioText(c.clickToOrderRate * 100)} = ${ratioText(c.normalRate * 100)}；爆款有效购买率 = 爆款曝光点击率${ratioText(c.hitClickRate * 100)} × 爆款支付成功率${ratioText(c.hitClickToOrderRate * 100)} = ${ratioText(c.hitRate * 100)}；普通作品订单占比为入参${pct(p.normalOrderShare)}%，爆款全生命周期日订单池为${fmt(c.hitDailyOrderPool)}单，单部爆款首日订单 = ${fmt(c.hitDailyOrderPool)} ÷ 生命周期因子${fmt(c.lifetimeFactor, 3)} = ${fmt(c.dailyHitOrders)}单；右侧收入模块统一为月维度，并展示头部/普通创作者月人均收入。`;
+      $("formula").innerHTML = `<strong>关键公式：</strong> 平台整体单日订单 = 单日GMV ÷ 客单价；普通作品有效购买率 = 普通作品曝光点击率${ratioText(c.normalClickRate * 100)} × 普通作品支付成功率${ratioText(c.clickToOrderRate * 100)} = ${ratioText(c.normalRate * 100)}；爆款有效购买率 = 爆款曝光点击率${ratioText(c.hitClickRate * 100)} × 爆款支付成功率${ratioText(c.hitClickToOrderRate * 100)} = ${ratioText(c.hitRate * 100)}；普通作品订单占比为入参${pct(p.normalOrderShare)}%，平台订单结构中新爆款首日订单池为${fmt(c.newHitFirstDayOrderPool)}单；单品收益使用首日订单基准${fmt(c.dailyHitOrders)}单，生命周期累计${fmt(c.hitLifetimeOrders)}单。`;
     }
 
     document.querySelectorAll("input[data-key]").forEach((input) => input.addEventListener("input", render));
