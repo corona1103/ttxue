@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f7fb" />
+  <title>天天学 · 创作者运营规划</title>
+  <style>
+    :root{--ink:#17223b;--sub:#53627b;--muted:#8d99ad;--line:#e6ebf3;--paper:#f5f7fb;--card:#fff;--blue:#3f6df0;--blue-soft:#eef3ff;--cyan:#12a99a;--cyan-soft:#eafaf7;--orange:#c78320;--orange-soft:#fff7e8;--purple:#7459c4;--purple-soft:#f4f0ff;--red:#d35764;--red-soft:#fff0f2;--shadow:0 12px 32px rgba(34,53,93,.08)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--paper)}body{margin:0;color:var(--ink);font:13px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}button{font:inherit;cursor:pointer}
+    .app{width:min(1180px,calc(100% - 32px));margin:auto;padding:18px 0 56px}.hero{position:relative;overflow:hidden;padding:18px 28px;border-radius:20px;color:#fff;background:linear-gradient(135deg,#172a55,#315bc0);box-shadow:var(--shadow)}.hero:after{content:"";position:absolute;right:-80px;top:-125px;width:280px;height:280px;border:46px solid rgba(135,170,255,.22);border-radius:50%}.eyebrow{position:relative;z-index:1;color:#a9c1ff;font-size:9px;font-weight:800;letter-spacing:.17em}.hero h1{position:relative;z-index:1;margin:5px 0 3px;font-size:clamp(24px,3.4vw,34px);line-height:1.12;letter-spacing:-.05em}.hero-sub{position:relative;z-index:1;margin:0;color:#d8e2ff;font-size:12px}.hero-tags{position:relative;z-index:1;display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}.hero-tags span{padding:5px 9px;border:1px solid rgba(255,255,255,.19);border-radius:999px;color:#edf2ff;background:rgba(255,255,255,.1);font-size:10px}
+    .topnav{position:sticky;top:0;z-index:10;display:flex;gap:8px;overflow:auto;margin:14px -2px 0;padding:7px 2px;background:rgba(245,247,251,.92);backdrop-filter:blur(12px);scrollbar-width:none}.topnav::-webkit-scrollbar{display:none}.topnav a{flex:none;padding:7px 12px;border:1px solid var(--line);border-radius:999px;color:var(--sub);background:#fff;text-decoration:none;font-size:11px}.section{margin-top:22px;scroll-margin-top:54px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:0 2px 10px}.section-head h2{margin:0;font-size:18px;letter-spacing:-.03em}.section-head p{margin:0;color:var(--muted);font-size:11px}
+    .flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.flow-item{position:relative;min-height:92px;padding:15px 13px;border:1px solid var(--line);border-radius:15px;background:#fff}.flow-item:not(:last-child):after{content:"→";position:absolute;right:-15px;top:34px;z-index:2;color:#aab6c9;font-weight:700}.flow-no{display:grid;place-items:center;width:23px;height:23px;margin-bottom:10px;border-radius:8px;color:var(--blue);background:var(--blue-soft);font-size:10px;font-weight:800}.flow-item:nth-child(2) .flow-no{color:var(--purple);background:var(--purple-soft)}.flow-item:nth-child(3) .flow-no{color:var(--cyan);background:var(--cyan-soft)}.flow-item:nth-child(4) .flow-no{color:var(--orange);background:var(--orange-soft)}.flow-item b{display:block;font-size:14px}.flow-item small{display:block;margin-top:3px;color:var(--muted);font-size:10px}.expand-toggle{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:9px;padding:8px;border:1px solid var(--line);border-radius:10px;color:var(--blue);background:#fff;font-size:11px}.expand-toggle .chevron{transition:transform .18s}.expand-toggle[aria-expanded="true"] .chevron{transform:rotate(180deg)}.progress-panel{display:none;margin-top:8px;padding:11px;border:1px solid var(--line);border-radius:11px;background:#fff}.progress-panel.open{display:block}.progress-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.progress-item{padding:10px;border-radius:9px;background:#f8faff}.progress-item b{display:block;font-size:11px}.progress-item span{display:block;margin-top:4px;color:var(--muted);font-size:10px;line-height:1.45}
+    .stage-panel{padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 6px 20px rgba(34,53,93,.04)}.stage-tabs{display:flex;gap:6px;overflow:auto;margin-bottom:13px;padding-bottom:2px;scrollbar-width:none}.stage-tabs::-webkit-scrollbar{display:none}.stage-tabs button{flex:none;padding:8px 12px;border:1px solid var(--line);border-radius:9px;color:var(--sub);background:#fafbfd;font-size:11px}.stage-tabs button.active{border-color:#bdd0ff;color:var(--blue);background:var(--blue-soft);font-weight:700}.stage-main{display:grid;grid-template-columns:1.15fr 1fr 1fr 1fr;gap:9px}.stage-goal,.stage-cell{min-height:125px;padding:13px;border-radius:12px;background:#f8faff}.stage-goal{color:#fff;background:linear-gradient(145deg,#315bc0,#5478e9)}.stage-goal small,.stage-cell small{display:block;font-size:10px;opacity:.72}.stage-goal b{display:block;margin-top:8px;font-size:19px;letter-spacing:-.04em}.stage-goal span{display:block;margin-top:5px;color:#dbe5ff;font-size:11px;line-height:1.45}.stage-cell h4{margin:0;font-size:12px}.stage-cell ul{display:grid;gap:7px;margin:10px 0 0;padding:0;list-style:none}.stage-cell li{position:relative;padding-left:12px;color:var(--sub);font-size:11px;line-height:1.4}.stage-cell li:before{content:"";position:absolute;left:0;top:6px;width:5px;height:5px;border-radius:50%;background:#9eb5f7}.stage-cell:nth-child(3) li:before{background:#8bd4ca}.stage-cell:nth-child(4) li:before{background:#e8bd71}
+    .stage-roles{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.stage-roles-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}.stage-roles-head h3{margin:0;font-size:14px}.stage-roles-head span{color:var(--muted);font-size:10px}.roles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.role{min-width:0;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff}.role-top{display:flex;align-items:center;gap:8px}.role-icon{width:28px;height:28px;display:grid;place-items:center;border-radius:8px;font-weight:800}.role:nth-child(1) .role-icon{color:var(--blue);background:var(--blue-soft)}.role:nth-child(2) .role-icon{color:var(--purple);background:var(--purple-soft)}.role:nth-child(3) .role-icon{color:var(--cyan);background:var(--cyan-soft)}.role:nth-child(4) .role-icon{color:var(--orange);background:var(--orange-soft)}.role h3{margin:0;font-size:14px}.role-goal{margin:11px 0 9px;padding-bottom:9px;border-bottom:1px solid var(--line);color:var(--sub);font-size:11px}.role-goal strong{display:block;margin-bottom:3px;color:var(--ink);font-size:10px;letter-spacing:.08em}.todo{display:grid;gap:6px}.todo div{position:relative;padding-left:13px;color:var(--sub);font-size:10px;line-height:1.45}.todo div:before{content:"";position:absolute;left:0;top:6px;width:5px;height:5px;border-radius:50%;background:#b8c8ee}.role:nth-child(2) .todo div:before{background:#c7b9ee}.role:nth-child(3) .todo div:before{background:#98ddd6}.role:nth-child(4) .todo div:before{background:#edc47c}
+    .module{padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 6px 20px rgba(34,53,93,.04)}.module-label{margin:0 0 9px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.12em}.incentive-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.incentive{min-height:126px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fbfcff}.incentive .num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;color:var(--blue);background:var(--blue-soft);font-size:10px;font-weight:800}.incentive h3{display:inline;margin-left:6px;font-size:12px}.incentive p{margin:9px 0 0;color:var(--sub);font-size:10px;line-height:1.6}.incentive:nth-child(2) .num{color:var(--cyan);background:var(--cyan-soft)}.incentive:nth-child(3) .num{color:var(--orange);background:var(--orange-soft)}.incentive:nth-child(4) .num{color:var(--purple);background:var(--purple-soft)}.incentive:nth-child(5) .num{color:var(--red);background:var(--red-soft)}
+    .cross{overflow:auto;margin-top:13px;border:1px solid var(--line);border-radius:11px}.cross table{width:100%;min-width:690px;border-collapse:collapse;font-size:10px}.cross th{padding:9px 10px;color:var(--muted);background:#f8faff;text-align:left;font-weight:700}.cross td{padding:10px;border-top:1px solid var(--line);color:var(--sub);vertical-align:top}.cross td:first-child{color:var(--ink);font-weight:700;white-space:nowrap}.cross strong{color:var(--ink);font-weight:650}.cross .ops{color:var(--blue)}.cross .note{margin-top:8px;color:var(--muted);font-size:10px}
+    .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.metric{min-height:130px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff}.metric h3{margin:0;font-size:13px}.metric p{margin:3px 0 11px;color:var(--muted);font-size:10px}.metric ul{display:grid;gap:6px;margin:0;padding:0;list-style:none}.metric li{display:flex;justify-content:space-between;gap:8px;color:var(--sub);font-size:10px}.metric li b{color:var(--ink);font-size:11px}.metric:nth-child(1){background:var(--blue-soft);border-color:#d8e2ff}.metric:nth-child(2){background:var(--purple-soft);border-color:#e4dcff}.metric:nth-child(3){background:var(--cyan-soft);border-color:#d2f0eb}.metric:nth-child(4){background:var(--orange-soft);border-color:#f5e5c4}.footer-note{margin-top:20px;color:#9ba6b8;font-size:10px;text-align:center}
+    @media(max-width:920px){.stage-main{grid-template-columns:1fr 1fr}.stage-goal{grid-row:span 2}.roles{grid-template-columns:repeat(2,minmax(0,1fr))}.incentive-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.progress-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:620px){.app{width:min(100% - 20px,520px);padding-top:10px}.hero{padding:16px 18px;border-radius:17px}.hero:after{right:-130px}.section{margin-top:18px}.section-head h2{font-size:16px}.section-head p{display:none}.flow{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.flow-item{min-height:78px}.flow-item:after{display:none}.stage-panel{padding:12px}.stage-tabs button{padding:7px 10px}.stage-main{grid-template-columns:1fr}.stage-goal{min-height:102px;grid-row:auto}.stage-cell{min-height:0}.roles{grid-template-columns:1fr 1fr;gap:8px}.role{padding:11px}.role h3{font-size:12px}.incentive-grid{grid-template-columns:1fr 1fr}.incentive{min-height:132px;padding:10px}.progress-grid{grid-template-columns:1fr 1fr}.progress-item{padding:9px 8px}.metrics{grid-template-columns:1fr 1fr}.metric{min-height:128px;padding:11px}.metric li{display:block}.metric li b{display:block;margin-top:2px}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div class="eyebrow">TIANTIANXUE · CREATOR OPERATIONS</div>
+      <h1>创作者运营规划</h1>
+      <p class="hero-sub">有效供给 · 稳定产出 · 内容转化 · 生态留存</p>
+      <div class="hero-tags"><span>四步闭环</span><span>激励 × 分层</span><span>四角色协同</span><span>ROI 看板</span></div>
+    </header>
+
+    <section class="section" id="flow">
+      <div class="section-head"><h2>创作者运营闭环</h2><p>四个关键动作</p></div>
+      <div class="flow">
+        <div class="flow-item"><span class="flow-no">01</span><b>筛选发现</b><small>找对作者 · 找对内容</small></div>
+        <div class="flow-item"><span class="flow-no">02</span><b>入驻与首发</b><small>认证 · 投稿 · 首轮反馈</small></div>
+        <div class="flow-item"><span class="flow-no">03</span><b>扶持变现</b><small>流量 · 质量 · 付费转化</small></div>
+        <div class="flow-item"><span class="flow-no">04</span><b>留存</b><small>收入预期 · 长期合作</small></div>
+      </div>
+      <button class="expand-toggle" type="button" data-progress="flowProgress" aria-expanded="false">展开进展 <span class="chevron">⌄</span></button>
+      <div class="progress-panel" id="flowProgress">
+        <div class="progress-grid">
+          <div class="progress-item"><b>筛选发现</b><span>近期重点：待周报同步</span></div>
+          <div class="progress-item"><b>入驻与首发</b><span>近期重点：待周报同步</span></div>
+          <div class="progress-item"><b>扶持变现</b><span>近期重点：待周报同步</span></div>
+          <div class="progress-item"><b>留存</b><span>近期重点：待周报同步</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="stages">
+      <div class="section-head"><h2>平台发展阶段</h2><p>目标与策略重点</p></div>
+      <div class="stage-panel">
+        <div class="stage-tabs"><button class="active">0→1 供给验证</button><button>1→10 模型成型</button><button>10→100 规模增长</button><button>生态成熟</button></div>
+        <div class="stage-main" id="stageContent"></div>
+        <div class="stage-roles">
+          <div class="stage-roles-head"><h3>角色分工</h3><span id="roleStage">当前阶段重点</span></div>
+          <div class="roles" id="roleContent"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="incentives">
+      <div class="section-head"><h2>激励体系 × 分层运营</h2><p>激励给结果，运营补服务</p></div>
+      <div class="module">
+        <div class="module-label">激励体系 · 5 个大类</div>
+        <div class="incentive-grid">
+          <article class="incentive"><span class="num">01</span><h3>基础商业分成</h3><p>有效观看 / 订单分成<br>月度结算 · 收益透明 · 退款追溯</p></article>
+          <article class="incentive"><span class="num">02</span><h3>成长扶持</h3><p>首发奖励 · 连载达标奖<br>冷启动流量包 · 阶段里程碑</p></article>
+          <article class="incentive"><span class="num">03</span><h3>运营活动激励</h3><p>月度赛马 · 征文 / 主题挑战<br>榜单奖金 · 参与奖 · 活动勋章</p></article>
+          <article class="incentive"><span class="num">04</span><h3>质量与关系奖励</h3><p>完播 / 留存奖 · 优质作品奖<br>榜单荣誉 · 培训工具 · 专属服务</p></article>
+          <article class="incentive"><span class="num">05</span><h3>战略合作远景</h3><p>最低收入保障 · 联合制作基金<br>版权采购 · 系列 / 年度合作</p></article>
+        </div>
+        <div class="module-label" style="margin-top:17px">交叉关系 · 分层激励不含基础商业分成</div>
+        <div class="cross"><table><thead><tr><th>创作者层级</th><th>增量激励组合</th><th>分层运营动作</th><th>升级信号</th></tr></thead><tbody>
+          <tr><td>潜力新人</td><td><strong>首发奖励 + 活动参与奖 + 冷启动流量包</strong></td><td class="ops">入驻辅导、选题模板、首发反馈</td><td>完成首部作品 / 前 3 条有效内容</td></tr>
+          <tr><td>成长作者</td><td><strong>月度赛马 + 连载达标奖 + 质量奖</strong></td><td class="ops">训练营、周任务、数据诊断</td><td>连续更新、质量达标</td></tr>
+          <tr><td>稳定作者</td><td><strong>主题挑战 + 质量奖 + 流量资源包</strong></td><td class="ops">合集包装、流量测试、商业化指导</td><td>稳定产出且有转化</td></tr>
+          <tr><td>重点作者</td><td><strong>旗舰活动奖 + 质量奖 + 战略合作</strong></td><td class="ops">定制选题、Tab / 推荐位、专属运营</td><td>爆款、收入或专业影响力</td></tr>
+          <tr><td>机构 / MCN</td><td><strong>机构赛马 + 阶段奖励 + 战略合作</strong></td><td class="ops">批量排期、版权管理、批量结算</td><td>持续交付且风险可控</td></tr>
+        </tbody></table></div>
+        <button class="expand-toggle" type="button" data-progress="incentiveProgress" aria-expanded="false">展开进展 <span class="chevron">⌄</span></button>
+        <div class="progress-panel" id="incentiveProgress">
+          <div class="progress-grid">
+            <div class="progress-item"><b>激励规则</b><span>近期重点：待周报同步</span></div>
+            <div class="progress-item"><b>活动赛马</b><span>近期重点：待周报同步</span></div>
+            <div class="progress-item"><b>重点作者</b><span>近期重点：待周报同步</span></div>
+            <div class="progress-item"><b>ROI 看板</b><span>近期重点：待周报同步</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="metrics">
+      <div class="section-head"><h2>成本与收益看板</h2><p>四个指标方向</p></div>
+      <div class="metrics">
+        <article class="metric"><h3>供给效率</h3><p>作者池是否有效</p><ul><li>有效作者 <b>规模</b></li><li>首发率 <b>转化</b></li><li>稳定产出率 <b>供给</b></li><li>单稳定作者成本 <b>效率</b></li></ul></article>
+        <article class="metric"><h3>内容消费</h3><p>内容是否被用户接受</p><ul><li>有效观看 <b>消费</b></li><li>完播 / 留存 <b>质量</b></li><li>付费转化 <b>用户价值</b></li><li>退款率 <b>反向信号</b></li></ul></article>
+        <article class="metric"><h3>商业回报</h3><p>投入是否带来增量</p><ul><li>平台净收入 <b>收入</b></li><li>流量资源 ROI <b>资源</b></li><li>激励 ROI <b>政策</b></li><li>LTV / CAC <b>回本</b></li></ul></article>
+        <article class="metric"><h3>生态健康</h3><p>增长是否可持续</p><ul><li>30 / 60 / 90 日留存 <b>留存</b></li><li>创作者收入中位数 <b>信心</b></li><li>违规 / 版权率 <b>风险</b></li><li>头部收入集中度 <b>结构</b></li></ul></article>
+      </div>
+    </section>
+
+  </main>
+  <script>
+    const stages=[
+      {tab:'0→1 供给验证',goal:'跑测验证',desc:'高效招募搬运，找到可消费的作者与内容',focus:['高效招募','跑测验证','标准 / SOP'],gate:['有效作者出现','首发链路跑通','首批内容有消费信号'],roles:{运营:['批量建联、快速筛选','推动认证与首发','沉淀招募话术 / SOP'],产品:['跑通注册、认证、投稿','建立作品状态流转','记录来源与首发数据'],数据:['定义有效作者口径','看首发漏斗与内容信号','建立成本基线'],内容:['建立垂类与选题池','打磨审核标准','沉淀首发模板'] }},
+      {tab:'1→10 模型成型',goal:'复制模型',desc:'让首发、更新和转化有稳定方法',focus:['分层运营','训练营','激励试点'],gate:['30 日留存稳定','连续更新形成','激励 ROI 可测'],roles:{运营:['建立新人 / 成长 / 重点分层','训练营与周任务','重点作者 1 对 1'],产品:['标签与任务系统','激励规则配置','微课 Tab / 推荐位管理'],数据:['看分层转化差异','做资源位增量归因','复盘激励投入'],内容:['形成连载模板','优化合集包装','复用优质案例'] }},
+      {tab:'10→100 规模增长',goal:'规模增长',desc:'提升人效、供给量和平台净收入',focus:['自动化触达','机构合作','ROI 放大'],gate:['单作者成本下降','内容供给扩大','生态贡献利润为正'],roles:{运营:['社群与 CRM 触达','机构 / MCN 合作','休眠唤醒与退出'],产品:['CRM 与自动分层','激励引擎与批量结算','流量实验工具'],数据:['看 LTV / CAC','监控回本周期','建立 ROI 预警'],内容:['矩阵化供给','联合制作重点项目','规模化质量治理'] }},
+      {tab:'生态成熟',goal:'生态经营',desc:'形成透明、稳定、可持续的创作者生态',focus:['长期合作','生态治理','多元商业化'],gate:['创作者收入可预期','收入结构分散','平台不依赖单一作者'],roles:{运营:['创作者品牌与社区','长期签约与续约','生态规则与申诉'],产品:['商业市场 / 开放数据','版权与结算能力','智能生产与运营工具'],数据:['看贡献利润','监控集中度与健康度','支持策略决策'],内容:['头部标杆建设','中腰部规模供给','内容资产长期经营'] }}
+    ];
+    const icons={运营:'运',产品:'产',数据:'数',内容:'内'};
+    function renderStage(i){
+      const s=stages[i];
+      document.getElementById('stageContent').innerHTML=`<div class="stage-goal"><small>本阶段核心目标</small><b>${s.goal}</b><span>${s.desc}</span></div><div class="stage-cell"><h4>策略重点</h4><ul>${s.focus.map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="stage-cell"><h4>验证门槛</h4><ul>${s.gate.map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="stage-cell"><h4>阶段产出</h4><ul><li>可复制的方法</li><li>可追踪的数据</li><li>可放大的机制</li></ul></div>`;
+      document.getElementById('roleStage').textContent=`${s.tab} · 对应重点`;
+      document.getElementById('roleContent').innerHTML=Object.entries(s.roles).map(([name,todos])=>`<article class="role"><div class="role-top"><span class="role-icon">${icons[name]}</span><h3>${name}</h3></div><div class="role-goal"><strong>本阶段 Todo</strong>${todos[0]}</div><div class="todo">${todos.slice(1).map(x=>`<div>${x}</div>`).join('')}</div></article>`).join('');
+      document.querySelectorAll('.stage-tabs button').forEach((b,n)=>b.classList.toggle('active',n===i));
+    }
+    document.querySelectorAll('.expand-toggle').forEach(button=>button.addEventListener('click',()=>{
+      const panel=document.getElementById(button.dataset.progress);
+      const open=panel.classList.toggle('open');
+      button.setAttribute('aria-expanded',String(open));
+      button.firstChild.textContent=open?'收起进展 ':'展开进展 ';
+    }));
+    document.querySelectorAll('.stage-tabs button').forEach((b,i)=>b.addEventListener('click',()=>renderStage(i)));
+    renderStage(0);
+  </script>
+</body>
+</html>
