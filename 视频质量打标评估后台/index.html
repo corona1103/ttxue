@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>内容质量评估 · 天天学</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>.queue-notice[hidden]{display:none}</style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-lockup"><div class="brand-mark">天</div><div><strong>天天学</strong><span>内容工作台</span></div></div>
+      <div class="side-section-label">审核中心</div>
+      <nav class="side-nav" aria-label="主导航">
+        <a class="side-nav-item" id="qualityNav" href="#quality"><span class="nav-symbol">◈</span><span>质量评估</span><span class="nav-badge">18</span></a>
+        <a class="side-nav-item" id="allVideosNav" href="#all-videos"><span class="nav-symbol">☷</span><span>全部视频</span></a>
+        <a class="side-nav-item" href="#history"><span class="nav-symbol">◷</span><span>评估记录</span></a>
+      </nav>
+      <div class="side-bottom"><div class="sync-card"><span class="live-dot"></span><div><strong>数据已同步</strong><small>2026.11.13 · 14:32</small></div></div><div class="reviewer"><div class="reviewer-avatar" id="reviewerAvatar">林</div><div><strong id="reviewerName">林审核</strong><small id="reviewerTeam">基础运营 · 内容质量组</small></div><span class="more-dot">•••</span></div></div>
+    </aside>
+
+    <main class="main-content" id="quality">
+      <header class="page-header">
+        <div class="breadcrumb"><span>审核中心</span><b>/</b><strong id="pageRole">基础运营 · 视频质量评估</strong></div>
+        <div class="header-row"><div><div class="eyebrow" id="pageEyebrow">VIDEO QUALITY LAB <span></span> BATCH REVIEW</div><h1 id="pageTitle">视频质量评估</h1><p id="pageDescription">仅展示待评估内容，领取批次后完成知识点与质量评级。</p></div><div class="header-actions"><span class="role-badge" id="roleBadge">基础运营</span><button class="start-header-button" id="startEvaluation" type="button">开始评估 <span>↗</span></button><button class="outline-button" id="refreshButton" type="button">刷新列表 <span>↻</span></button><div class="progress-copy"><strong id="progressValue">12 <small>/ 30</small></strong><span id="progressLabel">今日已完成</span></div></div></div>
+      </header>
+
+      <section class="summary-grid" aria-label="评估概览">
+        <div class="summary-card"><span class="summary-icon blue">◈</span><div><small>待评估视频</small><strong>18</strong></div><em>+4 今日新增</em></div>
+        <div class="summary-card"><span class="summary-icon green">✓</span><div><small>今日已完成</small><strong>12</strong></div><em>完成率 40%</em></div>
+        <div class="summary-card"><span class="summary-icon coral">D</span><div><small>D 类待复核</small><strong>4</strong></div><em>需要备注理由</em></div>
+        <div class="summary-card"><span class="summary-icon orange">!</span><div><small>异常数据</small><strong>2</strong></div><em>行为数据待更新</em></div>
+      </section>
+
+      <section class="list-section" id="queue">
+        <div class="list-toolbar"><div><span class="section-kicker" id="listKicker">PENDING REVIEW</span><h2><span id="listTitle">待评估视频</span> <b id="videoCount">0 条</b></h2></div><div class="toolbar-actions"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="搜索标题、视频 ID、作者" /></label><select id="knowledgeFilter" aria-label="筛选知识点"><option value="all">全部知识点</option></select><select id="statusFilter" aria-label="筛选评级"><option value="pending">待评估</option><option value="all">全部评级</option><option value="S">S 精品</option><option value="A">A 合格</option><option value="D">D 低质</option></select><button class="filter-button" id="filterButton" type="button">筛选</button><div id="batchControl"></div></div></div>
+        <div class="queue-notice" id="queueNotice" hidden></div>
+        <div class="list-card">
+          <div class="list-head"><span class="head-content">视频内容</span><span class="head-knowledge">知识点标签</span><span class="head-data"><button class="sort-trigger" data-sort="behaviorScore" type="button">行为数据 <span id="behaviorSortIndicator">↕</span></button></span><span class="head-aux"><button class="sort-trigger" data-sort="qualityScore" type="button">辅助标签 <span id="qualitySortIndicator">↕</span></button></span><span class="head-rating">内容评级</span><span class="head-operator">打标操作人</span></div>
+          <div id="videoList" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="knowledgeModal" hidden><section class="knowledge-modal" role="dialog" aria-modal="true" aria-labelledby="knowledgeModalTitle"><div class="modal-header"><div><span class="section-kicker">KNOWLEDGE TREE</span><h2 id="knowledgeModalTitle">修改知识点标签</h2><p>请选择一个三级知识点作为视频主标签。</p></div><button class="close-button" id="closeKnowledge" type="button" aria-label="关闭">×</button></div><div class="tree-current"><span>当前标签</span><strong id="currentTreeLabel"></strong></div><div class="tree-columns" id="treeColumns"></div><div class="modal-footer"><span class="selection-hint" id="selectionHint">请从左至右选择知识树</span><div><button class="cancel-button" id="cancelKnowledge" type="button">取消</button><button class="confirm-button" id="confirmKnowledge" type="button" disabled>确认更换</button></div></div></section></div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
