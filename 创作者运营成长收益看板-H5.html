@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f7fb" />
+  <title>天天学 · 创作者成长收益看板</title>
+  <style>
+    :root{--ink:#17223b;--sub:#53627b;--muted:#8d99ad;--line:#e6ebf3;--paper:#f5f7fb;--card:#fff;--blue:#3f6df0;--blue-soft:#eef3ff;--cyan:#12a99a;--cyan-soft:#eafaf7;--orange:#c78320;--orange-soft:#fff7e8;--purple:#7459c4;--purple-soft:#f4f0ff;--red:#d35764;--red-soft:#fff0f2;--shadow:0 12px 32px rgba(34,53,93,.08)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--paper)}body{margin:0;color:var(--ink);font:13px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}.app{width:min(1180px,calc(100% - 32px));margin:auto;padding:18px 0 56px}.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.back{display:inline-flex;align-items:center;gap:5px;color:var(--sub);font-size:11px;text-decoration:none}.back:hover{color:var(--blue)}.demo-badge{padding:5px 8px;border:1px solid #f0d9a5;border-radius:999px;color:#a56b17;background:var(--orange-soft);font-size:10px;font-weight:700}
+    .hero{position:relative;overflow:hidden;padding:22px 28px;border-radius:20px;color:#fff;background:linear-gradient(135deg,#172a55,#315bc0);box-shadow:var(--shadow)}.hero:after{content:"";position:absolute;right:-80px;top:-130px;width:290px;height:290px;border:48px solid rgba(135,170,255,.22);border-radius:50%}.eyebrow{position:relative;z-index:1;color:#a9c1ff;font-size:9px;font-weight:800;letter-spacing:.17em}.hero h1{position:relative;z-index:1;margin:6px 0 4px;font-size:clamp(24px,3.4vw,34px);line-height:1.12;letter-spacing:-.05em}.hero p{position:relative;z-index:1;margin:0;color:#d8e2ff;font-size:12px}.hero-tags{position:relative;z-index:1;display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}.hero-tags span{padding:5px 9px;border:1px solid rgba(255,255,255,.19);border-radius:999px;color:#edf2ff;background:rgba(255,255,255,.1);font-size:10px}
+    .section{margin-top:22px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:0 2px 10px}.section-head h2{margin:0;font-size:18px;letter-spacing:-.03em}.section-head p{margin:0;color:var(--muted);font-size:11px}.updated{margin:0 2px 12px;color:var(--muted);font-size:10px}
+    .controls{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff}.period-tabs,.view-tabs{display:flex;gap:5px;overflow:auto;scrollbar-width:none}.period-tabs::-webkit-scrollbar,.view-tabs::-webkit-scrollbar{display:none}.period-tabs button,.view-tabs button{flex:none;padding:7px 11px;border:1px solid var(--line);border-radius:8px;color:var(--sub);background:#fafbfd;font:inherit;font-size:10px;cursor:pointer}.period-tabs button.active,.view-tabs button.active{border-color:#bdd0ff;color:var(--blue);background:var(--blue-soft);font-weight:700}.controls-label{color:var(--muted);font-size:10px;white-space:nowrap}
+    .summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.summary-card{min-height:104px;padding:12px;border:1px solid var(--line);border-radius:13px;background:#fff}.summary-card:nth-child(1){background:var(--blue-soft);border-color:#d8e2ff}.summary-card:nth-child(2){background:var(--purple-soft);border-color:#e4dcff}.summary-card:nth-child(3){background:var(--cyan-soft);border-color:#d2f0eb}.summary-card:nth-child(4){background:#eff8ff;border-color:#d7ebfa}.summary-card:nth-child(5){background:#f1fbf6;border-color:#d9f0e5}.summary-card:nth-child(6){background:var(--orange-soft);border-color:#f5e5c4}.summary-card small{display:block;color:var(--muted);font-size:10px}.summary-card strong{display:block;margin-top:9px;font-size:21px;letter-spacing:-.04em}.summary-card span{display:block;margin-top:4px;color:var(--sub);font-size:10px}
+    .trend-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.trend-card{padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff}.trend-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.trend-title b{font-size:13px}.trend-title span{color:var(--muted);font-size:10px}.bars{display:grid;grid-template-columns:repeat(6,1fr);align-items:end;gap:10px;height:112px;margin-top:12px;padding:0 4px;border-bottom:1px solid var(--line)}.bar-wrap{display:grid;align-content:end;height:100%;gap:5px;text-align:center}.bar{width:100%;min-height:10px;border-radius:5px 5px 0 0;background:linear-gradient(180deg,#82a4ff,#3f6df0)}.bar.cyan{background:linear-gradient(180deg,#7bd9ce,#12a99a)}.bar-wrap small{color:var(--muted);font-size:9px}
+    .data-panel{padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 6px 20px rgba(34,53,93,.04)}.data-panel-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}.data-panel-head h2{margin:0;font-size:16px}.data-panel-head p{margin:0;color:var(--muted);font-size:10px}.table-scroll{overflow:auto;border:1px solid var(--line);border-radius:11px}.data-table{width:100%;min-width:1180px;border-collapse:collapse;font-size:10px}.data-table th{padding:10px;color:var(--muted);background:#f8faff;text-align:left;font-weight:700;white-space:nowrap}.data-table td{padding:11px 10px;border-top:1px solid var(--line);color:var(--sub);white-space:nowrap;vertical-align:middle}.data-table td:first-child{color:var(--ink);font-weight:700}.data-table td:nth-child(2){color:var(--blue)}.data-table td strong{color:var(--ink)}.status{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:700}.status:before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}.status.high{color:#168a7d;background:var(--cyan-soft)}.status.growth{color:#466bd6;background:var(--blue-soft)}.status.stable{color:#a56b17;background:var(--orange-soft)}.status.watch{color:#b65361;background:var(--red-soft)}
+    .signal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.signal{min-height:102px;padding:13px;border:1px solid var(--line);border-radius:13px;background:#fff}.signal-top{display:flex;align-items:center;gap:7px}.signal-dot{width:9px;height:9px;border-radius:50%}.signal.high .signal-dot{background:var(--cyan)}.signal.growth .signal-dot{background:var(--blue)}.signal.watch .signal-dot{background:var(--red)}.signal b{font-size:12px}.signal p{margin:9px 0 0;color:var(--sub);font-size:10px;line-height:1.55}.footnote{margin:15px 2px 0;color:var(--muted);font-size:10px;line-height:1.6}.empty{padding:22px;text-align:center;color:var(--muted);font-size:11px}
+    @media(max-width:1050px){.summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:720px){.app{width:min(100% - 20px,560px);padding-top:10px}.hero{padding:18px;border-radius:17px}.hero:after{right:-130px}.controls{display:block}.controls-label{display:block;margin-bottom:8px}.view-tabs{margin-top:10px}.trend-grid,.signal-grid{grid-template-columns:1fr}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.summary-card{min-height:96px}.summary-card strong{font-size:19px}.data-panel{padding:12px}.data-panel-head{display:block}.data-panel-head p{margin-top:4px}.topline{align-items:flex-start}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topline"><a class="back" href="创作者运营规划-H5.html">← 返回创作者运营规划</a><span class="demo-badge">DEMO 数据 · 用于看板演示</span></div>
+    <header class="hero">
+      <div class="eyebrow">TIANTIANXUE · CREATOR GROWTH & REVENUE</div>
+      <h1>创作者成长收益看板</h1>
+      <p>从作者与作品两个维度，识别供给潜力、内容质量与商业回报</p>
+      <div class="hero-tags"><span>整体经营总览</span><span>作者潜力识别</span><span>作品潜力识别</span><span>ROI 追踪</span></div>
+    </header>
+
+    <section class="section">
+      <div class="section-head"><h2>看板周期</h2><p id="periodHint">当前展示近 30 日经营状态</p></div>
+      <div class="controls">
+        <span class="controls-label">选择数据周期</span>
+        <div class="period-tabs" role="tablist" aria-label="数据周期">
+          <button type="button" data-period="7d">近 7 日</button>
+          <button type="button" class="active" data-period="30d">近 30 日</button>
+          <button type="button" data-period="quarter">本季度</button>
+        </div>
+      </div>
+      <p class="updated" id="updatedAt">数据更新时间：2026-11-20 09:30 · 口径：有效作者 / 有效作品</p>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>整体经营总览</h2><p>先判断盘面，再下钻作者和作品</p></div>
+      <div class="summary" id="summary"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>趋势摘要</h2><p>供给增长与商业回报是否同步</p></div>
+      <div class="trend-grid">
+        <article class="trend-card"><div class="trend-title"><b>有效作品供给</b><span id="supplyTrend">近 30 日 +18.4%</span></div><div class="bars" id="supplyBars"></div></article>
+        <article class="trend-card"><div class="trend-title"><b>平台净收入</b><span id="incomeTrend">近 30 日 +22.7%</span></div><div class="bars" id="incomeBars"></div></article>
+      </div>
+    </section>
+
+    <section class="section data-panel">
+      <div class="data-panel-head"><div><h2 id="tableTitle">作者潜力追踪</h2><p id="tableDesc">识别稳定产出、质量提升和商业转化同时向上的作者</p></div><div class="view-tabs" role="tablist" aria-label="数据维度"><button type="button" class="active" data-view="authors">作者维度</button><button type="button" data-view="works">作品维度</button></div></div>
+      <div class="table-scroll"><table class="data-table"><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>潜力状态说明</h2><p>运营识别标签，不等同于结算资格</p></div>
+      <div class="signal-grid">
+        <article class="signal high"><div class="signal-top"><span class="signal-dot"></span><b>高潜对象</b></div><p>产出稳定，消费质量和商业转化均处于上升区间，优先进入重点扶持和资源测试。</p></article>
+        <article class="signal growth"><div class="signal-top"><span class="signal-dot"></span><b>成长对象</b></div><p>已有明确的内容或转化信号，通过训练、选题和流量实验推动其跨过稳定门槛。</p></article>
+        <article class="signal watch"><div class="signal-top"><span class="signal-dot"></span><b>观察对象</b></div><p>质量、更新、转化或成本存在短板，先做诊断和小额验证，再决定是否追加资源。</p></article>
+      </div>
+      <p class="footnote">判断建议：作者看“稳定产出 × 内容质量 × 商业转化 × 留存效率”；作品看“消费质量 × 互动 × 付费转化 × 增长速度 − 退款风险”。当前数据为演示数据，后续可替换为真实 API。</p>
+    </section>
+  </main>
+
+  <script>
+    const dashboardData = {
+      overview: {
+        '7d': {authors:'98', works:'176', stableRate:'32.1%', netIncome:'¥18.6k', incentiveRoi:'2.2x', health:'78 / 良好', period:'近 7 日', update:'2026-11-20 09:30', supply:'+8.2%', income:'+11.4%'},
+        '30d': {authors:'126', works:'482', stableRate:'38.6%', netIncome:'¥86.4k', incentiveRoi:'2.7x', health:'82 / 良好', period:'近 30 日', update:'2026-11-20 09:30', supply:'+18.4%', income:'+22.7%'},
+        quarter: {authors:'214', works:'1,286', stableRate:'44.8%', netIncome:'¥268.9k', incentiveRoi:'3.1x', health:'86 / 健康', period:'本季度', update:'2026-11-20 09:30', supply:'+41.6%', income:'+53.2%'}
+      },
+      authors: [
+        {name:'林老师',level:'重点作者',works:'18',cadence:'4.5 集 / 月',views:'286.4k',completion:'58.2%',pay:'6.8%',creatorIncome:'¥12.6k',platformValue:'¥31.8k',cost:'¥4.2k',retention:'91%',potential:'高潜作者',status:'high',viewBase:286.4},
+        {name:'科普小周',level:'稳定作者',works:'12',cadence:'3.8 集 / 月',views:'174.6k',completion:'46.7%',pay:'4.2%',creatorIncome:'¥6.8k',platformValue:'¥18.2k',cost:'¥3.1k',retention:'78%',potential:'成长作者',status:'growth',viewBase:174.6},
+        {name:'历史放映室',level:'成长作者',works:'8',cadence:'3.0 集 / 月',views:'121.8k',completion:'42.1%',pay:'3.5%',creatorIncome:'¥4.2k',platformValue:'¥11.5k',cost:'¥2.7k',retention:'71%',potential:'成长作者',status:'growth',viewBase:121.8},
+        {name:'小小实验室',level:'稳定作者',works:'15',cadence:'2.6 集 / 月',views:'98.4k',completion:'51.3%',pay:'2.8%',creatorIncome:'¥3.9k',platformValue:'¥9.6k',cost:'¥4.5k',retention:'69%',potential:'稳定作者',status:'stable',viewBase:98.4},
+        {name:'故事课代表',level:'新芽作者',works:'3',cadence:'1.4 集 / 月',views:'46.2k',completion:'31.5%',pay:'1.1%',creatorIncome:'¥0.8k',platformValue:'¥2.1k',cost:'¥1.9k',retention:'42%',potential:'观察对象',status:'watch',viewBase:46.2}
+      ],
+      works: [
+        {name:'三分钟看懂地球',author:'林老师',type:'知识科普',episodes:'6',views:'486.2k',completion:'64.8%',interaction:'9.6%',pay:'8.2%',revenue:'¥18.6k',refund:'1.4%',growth:'+42%',cost:'¥2.1k',potential:'高潜作品',status:'high',viewBase:486.2},
+        {name:'课本人物有话说',author:'林老师',type:'历史故事',episodes:'8',views:'352.7k',completion:'56.2%',interaction:'7.8%',pay:'6.1%',revenue:'¥13.4k',refund:'1.8%',growth:'+31%',cost:'¥3.2k',potential:'高潜作品',status:'high',viewBase:352.7},
+        {name:'生活里的物理',author:'科普小周',type:'实验演示',episodes:'10',views:'228.4k',completion:'49.6%',interaction:'8.1%',pay:'4.8%',revenue:'¥8.2k',refund:'2.1%',growth:'+24%',cost:'¥2.8k',potential:'成长作品',status:'growth',viewBase:228.4},
+        {name:'如果历史有朋友圈',author:'历史放映室',type:'历史内容',episodes:'5',views:'168.2k',completion:'44.7%',interaction:'6.3%',pay:'3.7%',revenue:'¥5.6k',refund:'2.7%',growth:'+18%',cost:'¥2.4k',potential:'成长作品',status:'growth',viewBase:168.2},
+        {name:'一分钟讲透光合作用',author:'小小实验室',type:'生物知识',episodes:'4',views:'92.6k',completion:'52.4%',interaction:'5.1%',pay:'2.2%',revenue:'¥2.1k',refund:'1.6%',growth:'+6%',cost:'¥1.9k',potential:'稳定作品',status:'stable',viewBase:92.6},
+        {name:'成语里的小故事',author:'故事课代表',type:'语文启蒙',episodes:'3',views:'38.4k',completion:'29.8%',interaction:'3.2%',pay:'0.8%',revenue:'¥0.4k',refund:'4.8%',growth:'-8%',cost:'¥1.3k',potential:'待优化',status:'watch',viewBase:38.4}
+      ],
+      periods: { '7d':{factor:.62,bars:[42,48,55,61,66,72]},'30d':{factor:1,bars:[48,56,63,69,78,88]},quarter:{factor:1.34,bars:[52,63,70,81,92,100]} }
+    };
+
+    const overviewLabels=[['有效作者','authors','规模'],['有效作品','works','供给'],['稳定产出率','stableRate','供给质量'],['平台净收入','netIncome','商业回报'],['激励 ROI','incentiveRoi','投入效率'],['生态健康度','health','综合状态']];
+    const authorHead='<tr><th>作者</th><th>层级</th><th>有效作品</th><th>更新频次</th><th>平均有效观看</th><th>平均完播率</th><th>付费转化</th><th>创作者收入</th><th>平台贡献收入</th><th>单作者成本</th><th>30 日留存</th><th>潜力状态</th></tr>';
+    const workHead='<tr><th>作品</th><th>作者</th><th>内容类型</th><th>集数</th><th>有效观看</th><th>完播率</th><th>互动率</th><th>付费转化</th><th>作品收入</th><th>退款率</th><th>近 7 日增长</th><th>流量成本</th><th>潜力状态</th></tr>';
+    let currentPeriod='30d';
+    let currentView='authors';
+
+    function statusTag(label,status){return `<span class="status ${status}">${label}</span>`}
+    function scaledViews(value,factor){return `${(value*factor).toFixed(1)}k`}
+    function renderOverview(period){
+      const data=dashboardData.overview[period];
+      document.getElementById('summary').innerHTML=overviewLabels.map(([label,key,note])=>`<article class="summary-card"><small>${label}</small><strong>${data[key]}</strong><span>${note} · 同比演示</span></article>`).join('');
+      document.getElementById('periodHint').textContent=`当前展示${data.period}经营状态`;
+      document.getElementById('updatedAt').textContent=`数据更新时间：${data.update} · 口径：有效作者 / 有效作品 · ${data.period}`;
+      document.getElementById('supplyTrend').textContent=`${data.period} ${data.supply}`;
+      document.getElementById('incomeTrend').textContent=`${data.period} ${data.income}`;
+      renderBars(period);
+    }
+    function renderBars(period){
+      const values=dashboardData.periods[period].bars;
+      const labels=['一','二','三','四','五','六'];
+      document.getElementById('supplyBars').innerHTML=values.map((v,i)=>`<div class="bar-wrap"><div class="bar" style="height:${v}%"></div><small>${labels[i]}</small></div>`).join('');
+      document.getElementById('incomeBars').innerHTML=values.map((v,i)=>`<div class="bar-wrap"><div class="bar cyan" style="height:${Math.min(100,v+8)}%"></div><small>${labels[i]}</small></div>`).join('');
+    }
+    function renderTable(view,period){
+      const factor=dashboardData.periods[period].factor;
+      document.getElementById('tableTitle').textContent=view==='authors'?'作者潜力追踪':'作品潜力追踪';
+      document.getElementById('tableDesc').textContent=view==='authors'?'识别稳定产出、质量提升和商业转化同时向上的作者':'识别消费质量、转化效率和增长速度同时向上的作品';
+      document.getElementById('tableHead').innerHTML=view==='authors'?authorHead:workHead;
+      if(view==='authors'){
+        document.getElementById('tableBody').innerHTML=dashboardData.authors.map(row=>`<tr><td>${row.name}</td><td>${row.level}</td><td><strong>${row.works}</strong></td><td>${row.cadence}</td><td>${scaledViews(row.viewBase,factor)}</td><td>${row.completion}</td><td>${row.pay}</td><td>${row.creatorIncome}</td><td>${row.platformValue}</td><td>${row.cost}</td><td>${row.retention}</td><td>${statusTag(row.potential,row.status)}</td></tr>`).join('');
+      }else{
+        document.getElementById('tableBody').innerHTML=dashboardData.works.map(row=>`<tr><td>${row.name}</td><td>${row.author}</td><td>${row.type}</td><td>${row.episodes}</td><td><strong>${scaledViews(row.viewBase,factor)}</strong></td><td>${row.completion}</td><td>${row.interaction}</td><td>${row.pay}</td><td>${row.revenue}</td><td>${row.refund}</td><td>${row.growth}</td><td>${row.cost}</td><td>${statusTag(row.potential,row.status)}</td></tr>`).join('');
+      }
+    }
+    function setPeriod(period){currentPeriod=period;document.querySelectorAll('[data-period]').forEach(button=>button.classList.toggle('active',button.dataset.period===period));renderOverview(period);renderTable(currentView,period)}
+    function setView(view){currentView=view;document.querySelectorAll('[data-view]').forEach(button=>button.classList.toggle('active',button.dataset.view===view));renderTable(view,currentPeriod)}
+    document.querySelectorAll('[data-period]').forEach(button=>button.addEventListener('click',()=>setPeriod(button.dataset.period)));
+    document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));
+    renderOverview(currentPeriod);renderTable(currentView,currentPeriod);
+  </script>
+</body>
+</html>
