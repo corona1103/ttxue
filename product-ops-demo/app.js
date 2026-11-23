@@ -31,6 +31,33 @@ incomeRows.forEach((row, index) => {
   row.refund = [120, 80, 0, 60, 0, 40, 100, 30][index] || 0;
 });
 
+const creatorAccounts = [
+  { author: "周老师的奇妙课", authorId: "AUTH-10018", verified: "done", contract: "done", bank: "done", enterprise: "天天学教研工作室", risk: "normal", riskText: "正常", riskDetail: "未发现异常" },
+  { author: "林间心理屋", authorId: "AUTH-10021", verified: "done", contract: "done", bank: "done", enterprise: "林间心理屋工作室", risk: "watch", riskText: "需关注", riskDetail: "疑似恶意洗稿 · 相似度命中 2 次" },
+  { author: "朵朵讲故事", authorId: "AUTH-10024", verified: "done", contract: "pending", bank: "pending", enterprise: "个人主体", risk: "normal", riskText: "正常", riskDetail: "未发现异常" },
+  { author: "墨水工作室", authorId: "AUTH-10031", verified: "done", contract: "done", bank: "done", enterprise: "墨水内容工作室", risk: "review", riskText: "需复核", riskDetail: "疑似刷单作弊 · 订单行为异常" },
+  { author: "大象叔叔", authorId: "AUTH-10035", verified: "done", contract: "done", bank: "done", enterprise: "个人主体", risk: "normal", riskText: "正常", riskDetail: "未发现异常" },
+  { author: "橙子老师", authorId: "AUTH-10041", verified: "pending", contract: "pending", bank: "pending", enterprise: "个人主体", risk: "profile", riskText: "需补资料", riskDetail: "实名认证资料未齐全" }
+];
+
+const creatorObservationRows = [
+  { author: "周老师的奇妙课", authorId: "AUTH-10018", level: "重点作者", works: 18, cadence: "4.5 集 / 月", views: 286400, completion: 58.2, conversion: 6.8, income: 12600, platform: 31800, cost: 4200, retention: 91, potential: "高潜作者", status: "on" },
+  { author: "林间心理屋", authorId: "AUTH-10021", level: "稳定作者", works: 12, cadence: "3.8 集 / 月", views: 174600, completion: 46.7, conversion: 4.2, income: 6800, platform: 18200, cost: 3100, retention: 78, potential: "成长作者", status: "processing" },
+  { author: "朵朵讲故事", authorId: "AUTH-10024", level: "成长作者", works: 8, cadence: "3.0 集 / 月", views: 121800, completion: 42.1, conversion: 3.5, income: 4200, platform: 11500, cost: 2700, retention: 71, potential: "成长作者", status: "processing" },
+  { author: "墨水工作室", authorId: "AUTH-10031", level: "稳定作者", works: 15, cadence: "2.6 集 / 月", views: 98400, completion: 51.3, conversion: 2.8, income: 3900, platform: 9600, cost: 4500, retention: 69, potential: "稳定作者", status: "pending" },
+  { author: "大象叔叔", authorId: "AUTH-10035", level: "稳定作者", works: 11, cadence: "2.4 集 / 月", views: 88400, completion: 48.9, conversion: 2.4, income: 3100, platform: 7900, cost: 3200, retention: 66, potential: "稳定作者", status: "pending" },
+  { author: "橙子老师", authorId: "AUTH-10041", level: "新芽作者", works: 3, cadence: "1.4 集 / 月", views: 46200, completion: 31.5, conversion: 1.1, income: 800, platform: 2100, cost: 1900, retention: 42, potential: "观察对象", status: "rejected" }
+];
+
+const workObservationRows = [
+  { title: "小小发明家：科学实验课", author: "周老师的奇妙课", type: "科学启蒙", episodes: 18, views: 486200, completion: 64.8, interaction: 9.6, conversion: 8.2, income: 18600, refund: 1.4, growth: 42, cost: 2100, potential: "高潜作品", status: "on" },
+  { title: "给孩子的情绪小课", author: "林间心理屋", type: "成长心理", episodes: 12, views: 352700, completion: 56.2, interaction: 7.8, conversion: 6.1, income: 13400, refund: 1.8, growth: 31, cost: 3200, potential: "高潜作品", status: "on" },
+  { title: "绘本里的中国故事", author: "朵朵讲故事", type: "人文故事", episodes: 24, views: 228400, completion: 49.6, interaction: 8.1, conversion: 4.8, income: 8200, refund: 2.1, growth: 24, cost: 2800, potential: "成长作品", status: "processing" },
+  { title: "AI 时代的创意写作", author: "墨水工作室", type: "创意表达", episodes: 9, views: 168200, completion: 44.7, interaction: 6.3, conversion: 3.7, income: 5600, refund: 2.7, growth: 18, cost: 2400, potential: "成长作品", status: "processing" },
+  { title: "小小建筑师", author: "大象叔叔", type: "科学启蒙", episodes: 15, views: 92600, completion: 52.4, interaction: 5.1, conversion: 2.2, income: 2100, refund: 1.6, growth: 6, cost: 1900, potential: "稳定作品", status: "pending" },
+  { title: "小小音乐家：节奏启蒙", author: "橙子老师", type: "艺术启蒙", episodes: 16, views: 38400, completion: 29.8, interaction: 3.2, conversion: 0.8, income: 400, refund: 4.8, growth: -8, cost: 1300, potential: "待优化", status: "rejected" }
+];
+
 const settlementRows = [
   { no: "ST-202610-0098", authors: [{ author: "周老师的奇妙课", authorId: "AUTH-10018", orders: 18, due: 28620, paid: 28620, share: 28620, refund: 120 }, { author: "大象叔叔", authorId: "AUTH-10035", orders: 9, due: 20000, paid: 20000, share: 20000, refund: 80 }], period: "10/01 - 10/15", created: "2026-10-17 14:20", due: 48620, paid: 48620, status: "done", statusText: "已完成", items: 27 },
   { no: "ST-202610-0101", authors: [{ author: "林间心理屋", authorId: "AUTH-10021", orders: 12, due: 32780, paid: 0, share: 32780, refund: 60 }], period: "10/01 - 10/15", created: "2026-10-18 11:06", due: 32780, paid: 0, status: "processing", statusText: "处理中", items: 12 },
@@ -109,6 +136,7 @@ function init() {
 function defaultFilters(route) {
   if (route === "collections") return { collectionStatus: "on", collectionPeriod: "30" };
   if (route === "micro-course") return { microStatus: "on" };
+  if (route === "creator-income") return { incomeView: "authors" };
   return {};
 }
 
@@ -133,6 +161,17 @@ function pageHead(eyebrow, title, description, action = "") {
 
 function metricCard(label, value, trend, icon, trendClass = "") {
   return `<div class="metric-card"><div class="metric-label">${escapeHtml(label)}</div><div class="metric-value">${value}</div><div class="metric-trend ${trendClass}">${escapeHtml(trend)}</div><div class="metric-icon">${icon}</div></div>`;
+}
+
+function accountStatusTag(status) {
+  const map = { done: ["status-on", "已完成"], pending: ["status-pending", "待完成"] };
+  const [tone, label] = map[status] || ["status-off", "未完成"];
+  return `<span class="status-tag ${tone}">${label}</span>`;
+}
+
+function riskStatusTag(status, label) {
+  const tone = status === "normal" ? "status-on" : status === "review" ? "status-rejected" : "status-pending";
+  return `<span class="status-tag ${tone}">${escapeHtml(label)}</span>`;
 }
 
 function renderDashboard() {
@@ -176,7 +215,11 @@ function renderMicroCourse() {
 
 function renderCreatorIncome() {
   const author = (state.filters.incomeAuthor || "").toLowerCase();
+  const incomeView = state.filters.incomeView || "authors";
   const rows = incomeRows.filter((row) => (!author || [row.author, row.authorId].some((value) => value.toLowerCase().includes(author))) && (!state.filters.incomePeriod || (state.filters.incomePeriod === "7" ? Number(row.date.slice(3)) >= 21 : true)));
+  const filteredAccounts = creatorAccounts.filter((account) => !author || [account.author, account.authorId, account.enterprise].some((value) => value.toLowerCase().includes(author)));
+  const completedRate = (key) => filteredAccounts.length ? Math.round(filteredAccounts.filter((account) => account[key] === "done").length / filteredAccounts.length * 100) : 0;
+  const riskCount = filteredAccounts.filter((account) => account.risk !== "normal").length;
   const groupedMap = new Map();
   rows.forEach((row) => {
     const group = groupedMap.get(row.authorId) || { author: row.author, authorId: row.authorId, collections: new Set(), orders: 0, gross: 0, share: 0, refund: 0 };
@@ -193,7 +236,12 @@ function renderCreatorIncome() {
   const points = trend.map((v, i) => `${(i / (trend.length - 1) * 100).toFixed(2)},${(100 - v) * .82 + 8}`).join(" ");
   const area = `0,100 ${points} 100,100`;
   const rowsHtml = groups.map((group) => `<tr><td><div class="author-cell"><strong>${escapeHtml(group.author)}</strong><span>${escapeHtml(group.authorId)}</span></div></td><td class="mono">${group.collections.size} 个</td><td class="mono">${formatNumber(group.orders)}</td><td class="mono strong">${formatMoney(group.gross)}</td><td class="mono strong">${formatMoney(group.share)}</td><td class="action-col"><button class="btn-text" data-action="view-income-author" data-author-id="${group.authorId}">查看详情</button></td></tr>`).join("");
-  return `${pageHead("财务管理", "创作者收入", "按创作者和时间周期汇总查看订单、收入与分成。") }<div class="finance-grid"><div class="card chart-card"><div class="insight-head"><div><div class="insight-title">收入趋势</div><div class="insight-sub">近 12 个数据节点 · 单位：元</div></div><select class="duration-select"><option>近 30 天</option><option>近 90 天</option></select></div><div class="chart-wrap"><svg class="chart-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="${area}" fill="rgba(91,92,226,.08)"></polygon><polyline points="${points}" fill="none" stroke="#5b5ce2" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>${trend.map((v, i) => `<circle cx="${(i / (trend.length - 1) * 100).toFixed(2)}" cy="${(100 - v) * .82 + 8}" r="1.5" fill="#fff" stroke="#5b5ce2" stroke-width="1" vector-effect="non-scaling-stroke"></circle>`).join("")}</svg></div><div class="chart-labels"><span>10/01</span><span>10/07</span><span>10/14</span><span>10/21</span><span>10/28</span></div><div class="chart-legend"><span><i class="line-dot"></i>平台流水</span><span><i class="line-dot green"></i>创作者分成</span></div></div><div class="card quick-card"><h3>收入贡献 Top 3</h3><div class="quick-list"><div class="quick-item"><div class="quick-rank">1</div><div><strong>周老师的奇妙课</strong><span>6 个合集 · 贡献 28%</span></div><div class="quick-value">¥48,620</div></div><div class="quick-item"><div class="quick-rank">2</div><div><strong>林间心理屋</strong><span>3 个合集 · 贡献 19%</span></div><div class="quick-value">¥32,780</div></div><div class="quick-item"><div class="quick-rank">3</div><div><strong>朵朵讲故事</strong><span>5 个合集 · 贡献 16%</span></div><div class="quick-value">¥28,140</div></div></div><div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:11px">本周期共有 <strong style="color:var(--text)">${groups.length}</strong> 位创作者产生收入</div></div></div>${filter}<div class="card table-card"><div class="table-head"><div><span class="table-title">创作者收入汇总</span><span class="table-caption">共 ${groups.length} 位创作者</span></div></div><div class="table-wrap">${groups.length ? `<table><thead><tr><th>创作者</th><th>合集数</th><th>总订单</th><th>总收入</th><th>创作者分成</th><th class="action-col">操作</th></tr></thead><tbody>${rowsHtml}</tbody></table>` : emptyState("暂无收入记录", "换一个作者或周期试试")}</div></div>`;
+  const accountRows = filteredAccounts.map((account) => `<tr><td><div class="author-cell"><strong>${escapeHtml(account.author)}</strong><span>${escapeHtml(account.authorId)}</span></div></td><td>${accountStatusTag(account.verified)}</td><td>${accountStatusTag(account.contract)}</td><td>${accountStatusTag(account.bank)}</td><td><span class="enterprise-cell">${escapeHtml(account.enterprise)}</span></td><td>${riskStatusTag(account.risk, account.riskText)}<span class="risk-detail">${escapeHtml(account.riskDetail)}</span></td></tr>`).join("");
+  const accountPanel = `<div class="card account-status-card"><div class="table-head"><div><span class="table-title">创作者账号与风控状态</span><span class="table-caption">共 ${filteredAccounts.length} 位创作者 · 资料状态影响结算资格</span></div><span class="sortable-hint">风险标签仅用于运营排查</span></div><div class="table-wrap">${filteredAccounts.length ? `<table class="account-table"><thead><tr><th>创作者</th><th>实名认证</th><th>合同签约</th><th>银行卡</th><th>关联企业</th><th>安全风险</th></tr></thead><tbody>${accountRows}</tbody></table>` : emptyState("暂无匹配创作者", "换一个作者、作者 ID 或关联企业试试")}</div></div>`;
+  const authorRows = creatorObservationRows.filter((row) => !author || [row.author, row.authorId].some((value) => value.toLowerCase().includes(author))).map((row) => `<tr><td><div class="author-cell"><strong>${escapeHtml(row.author)}</strong><span>${escapeHtml(row.authorId)}</span></div></td><td>${escapeHtml(row.level)}</td><td class="mono">${row.works} 个</td><td>${row.cadence}</td><td class="mono">${formatNumber(row.views)}</td><td class="mono">${row.completion}%</td><td class="mono">${row.conversion}%</td><td class="mono strong">${formatMoney(row.income)}</td><td class="mono strong">${formatMoney(row.platform)}</td><td class="mono">${formatMoney(row.cost)}</td><td class="mono">${row.retention}%</td><td>${statusTag(row.status, row.potential)}</td></tr>`).join("");
+  const workRows = workObservationRows.filter((row) => !author || [row.title, row.author].some((value) => value.toLowerCase().includes(author))).map((row) => `<tr><td><div class="title-cell"><div class="cover cover-3">${escapeHtml(row.title.slice(0, 1))}</div><div><strong>${escapeHtml(row.title)}</strong><span>${escapeHtml(row.author)}</span></div></div></td><td>${escapeHtml(row.type)}</td><td class="mono">${row.episodes} 集</td><td class="mono">${formatNumber(row.views)}</td><td class="mono">${row.completion}%</td><td class="mono">${row.interaction}%</td><td class="mono">${row.conversion}%</td><td class="mono strong">${formatMoney(row.income)}</td><td class="mono">${row.refund}%</td><td class="mono ${row.growth < 0 ? "refund-value" : ""}">${row.growth > 0 ? "+" : ""}${row.growth}%</td><td class="mono">${formatMoney(row.cost)}</td><td>${statusTag(row.status, row.potential)}</td></tr>`).join("");
+  const observationPanel = `<div class="card observation-card"><div class="table-head observation-head"><div><span class="table-title">成长收益观测</span><span class="table-caption">追踪作者 / 作品的潜力状态与投入产出</span></div><div class="observe-tabs"><button class="observe-tab ${incomeView === "authors" ? "active" : ""}" data-action="set-income-view" data-view="authors">作者</button><button class="observe-tab ${incomeView === "works" ? "active" : ""}" data-action="set-income-view" data-view="works">作品</button></div></div><div class="observation-note">${incomeView === "authors" ? "作者维度：稳定产出 × 内容质量 × 商业转化 × 留存效率" : "作品维度：消费质量 × 互动 × 付费转化 × 增长速度 − 退款风险"}</div><div class="table-wrap">${incomeView === "authors" ? `<table class="observation-table"><thead><tr><th>作者</th><th>层级</th><th>有效作品</th><th>更新频次</th><th>有效观看</th><th>完播率</th><th>付费转化</th><th>作者收入</th><th>平台贡献</th><th>单作者成本</th><th>30 日留存</th><th>潜力状态</th></tr></thead><tbody>${authorRows}</tbody></table>` : `<table class="observation-table"><thead><tr><th>作品</th><th>内容类型</th><th>集数</th><th>有效观看</th><th>完播率</th><th>互动率</th><th>付费转化</th><th>作品收入</th><th>退款率</th><th>近 7 日增长</th><th>流量成本</th><th>潜力状态</th></tr></thead><tbody>${workRows}</tbody></table>`}</div></div>`;
+  return `${pageHead("财务管理", "创作者收入", "按创作者和时间周期汇总查看订单、收入、分成与账号状态。") }<div class="metric-grid account-metrics">${metricCard("实名完成率", `${completedRate("verified")}<small>%</small>`, `${filteredAccounts.length} 位创作者`, "✓")}${metricCard("合同签约率", `${completedRate("contract")}<small>%</small>`, "影响合作与结算", "▣")}${metricCard("银行卡绑定率", `${completedRate("bank")}<small>%</small>`, "影响打款资格", "¥")}${metricCard("风险待处理", riskCount, riskCount ? "需运营复核" : "暂无风险", "!", riskCount ? "down" : "")}</div><div class="finance-grid"><div class="card chart-card"><div class="insight-head"><div><div class="insight-title">收入趋势</div><div class="insight-sub">近 12 个数据节点 · 单位：元</div></div><select class="duration-select"><option>近 30 天</option><option>近 90 天</option></select></div><div class="chart-wrap"><svg class="chart-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="${area}" fill="rgba(91,92,226,.08)"></polygon><polyline points="${points}" fill="none" stroke="#5b5ce2" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>${trend.map((v, i) => `<circle cx="${(i / (trend.length - 1) * 100).toFixed(2)}" cy="${(100 - v) * .82 + 8}" r="1.5" fill="#fff" stroke="#5b5ce2" stroke-width="1" vector-effect="non-scaling-stroke"></circle>`).join("")}</svg></div><div class="chart-labels"><span>10/01</span><span>10/07</span><span>10/14</span><span>10/21</span><span>10/28</span></div><div class="chart-legend"><span><i class="line-dot"></i>平台流水</span><span><i class="line-dot green"></i>创作者分成</span></div></div><div class="card quick-card"><h3>收入贡献 Top 3</h3><div class="quick-list"><div class="quick-item"><div class="quick-rank">1</div><div><strong>周老师的奇妙课</strong><span>6 个合集 · 贡献 28%</span></div><div class="quick-value">¥48,620</div></div><div class="quick-item"><div class="quick-rank">2</div><div><strong>林间心理屋</strong><span>3 个合集 · 贡献 19%</span></div><div class="quick-value">¥32,780</div></div><div class="quick-item"><div class="quick-rank">3</div><div><strong>朵朵讲故事</strong><span>5 个合集 · 贡献 16%</span></div><div class="quick-value">¥28,140</div></div></div><div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:11px">本周期共有 <strong style="color:var(--text)">${groups.length}</strong> 位创作者产生收入</div></div></div>${filter}${observationPanel}${accountPanel}<div class="card table-card"><div class="table-head"><div><span class="table-title">创作者收入汇总</span><span class="table-caption">共 ${groups.length} 位创作者</span></div></div><div class="table-wrap">${groups.length ? `<table><thead><tr><th>创作者</th><th>合集数</th><th>总订单</th><th>总收入</th><th>创作者分成</th><th class="action-col">操作</th></tr></thead><tbody>${rowsHtml}</tbody></table>` : emptyState("暂无收入记录", "换一个作者或周期试试")}</div></div>`;
 }
 
 function renderSettlements() {
@@ -268,6 +316,7 @@ function handleClick(event) {
   if (!target) return;
   const action = target.dataset.action;
   if (action === "clear-filters") { state.filters = {}; render(); return; }
+  if (action === "set-income-view") { state.filters.incomeView = target.dataset.view || "authors"; render(); return; }
   if (action === "view-collection") { openCollectionDrawer(target.dataset.id); return; }
   if (action === "toggle-micro") {
     const collection = collectionById(target.dataset.id);

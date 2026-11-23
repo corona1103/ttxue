@@ -99,6 +99,24 @@ button { cursor: pointer; }
 
 .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
 .metric-card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 17px 18px 16px; min-height: 110px; overflow: hidden; }
+.account-metrics { margin-bottom: 20px; }
+.account-status-card { overflow: hidden; margin-bottom: 14px; }
+.account-table { min-width: 900px; }
+.account-table th, .account-table td { vertical-align: middle; }
+.enterprise-cell { color: var(--text); font-size: 12px; }
+.risk-detail { display: block; margin-top: 3px; color: var(--subtle); font-size: 10px; }
+.observation-card { overflow: hidden; margin-bottom: 14px; }
+.observation-head { align-items: flex-end; gap: 18px; }
+.observe-tabs { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 8px; background: #f7f8fc; flex: 0 0 auto; }
+.observe-tab { border: 0; background: transparent; color: var(--muted); min-width: 54px; height: 28px; padding: 0 12px; border-radius: 6px; font-size: 11px; transition: .18s ease; }
+.observe-tab:hover { color: var(--primary-dark); }
+.observe-tab.active { color: var(--primary-dark); background: #fff; box-shadow: 0 2px 7px rgba(53, 61, 117, .12); font-weight: 650; }
+.observation-note { padding: 10px 17px; color: var(--muted); background: #fbfcff; border-bottom: 1px solid var(--line); font-size: 11px; }
+.observation-table { min-width: 1240px; }
+.observation-table th, .observation-table td { vertical-align: middle; }
+.observation-table td { font-size: 11px; }
+.observation-table .title-cell { min-width: 205px; }
+.observation-table .title-cell strong { max-width: 165px; }
 .metric-card::after { content: ""; width: 84px; height: 84px; border-radius: 50%; position: absolute; right: -30px; top: -25px; background: var(--primary-soft); opacity: .8; }
 .metric-label { color: var(--muted); font-size: 11px; position: relative; z-index: 1; }
 .metric-value { font-size: 25px; font-weight: 750; letter-spacing: -.04em; margin-top: 9px; position: relative; z-index: 1; }
@@ -333,6 +351,10 @@ tbody tr:hover { background: #fcfcff; }
   .field.search { width: 100%; }
   .filter-spacer { display: none; }
   .filter-row > .btn { flex: 1; }
+  .observation-head { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .observe-tabs { align-self: stretch; }
+  .observe-tab { flex: 1; }
+  .observation-note { line-height: 1.6; }
   .form-grid { grid-template-columns: 1fr; }
   .form-field.full { grid-column: auto; }
   .drawer-body { padding-left: 17px; padding-right: 17px; }
