@@ -13,6 +13,7 @@
       <div class="workspace-label">内容治理</div>
       <nav class="side-nav" aria-label="审核平台导航">
         <button class="nav-item is-active" data-view="queue" type="button"><span class="nav-icon">▤</span><span>审核队列</span><span class="nav-count" id="queueCount">4</span></button>
+        <button class="nav-item" data-view="imageText" type="button"><span class="nav-icon">▧</span><span>图文审核</span><span class="nav-count" id="imageTextCount">2</span></button>
         <button class="nav-item" data-view="logs" type="button"><span class="nav-icon">◷</span><span>操作记录</span></button>
       </nav>
       <div class="sidebar-footer">
@@ -64,17 +65,57 @@
         </div>
       </section>
 
+      <section class="view" id="imageTextView" aria-labelledby="imageTextTitle">
+        <header class="page-header">
+          <div>
+            <div class="eyebrow">IMAGE &amp; TEXT REVIEW</div>
+            <h1 id="imageTextTitle">图文审核</h1>
+            <p>审核用户修改后的视频标题与封面图，AI 结果仅作辅助参考。</p>
+          </div>
+          <div class="header-actions"><span class="sync-dot"></span>数据已同步 <span class="header-time">刚刚</span></div>
+        </header>
+
+        <div class="queue-layout">
+          <section class="queue-left panel">
+            <div class="filter-title"><div><strong>全部图文</strong><span class="result-count" id="imageTextResultCount">4 条</span></div><button class="link-button" id="clearImageTextFilters" type="button">清除</button></div>
+            <div class="filter-grid">
+              <label>业务线<select id="imageTextBusinessFilter"><option value="">全部业务线</option><option>aigc量产</option><option>创作者上传</option></select></label>
+              <label>生产方<select id="imageTextProducerFilter"><option value="">全部生产方</option><option>个人创作者</option><option>机构账号</option><option>官方账号</option></select></label>
+              <label>内容类型<select id="imageTextContentTypeFilter"><option value="">全部内容类型</option><option value="video">视频封面标题</option><option value="collection">合集封面标题</option></select></label>
+              <label>作者昵称<input id="imageTextAuthorNameFilter" type="search" placeholder="输入作者昵称" /></label>
+              <label>作者 ID<input id="imageTextAuthorIdFilter" type="search" placeholder="输入作者 ID" /></label>
+              <label class="field-full">关键词<input id="imageTextKeywordFilter" type="search" placeholder="搜索标题、视频 ID..." /></label>
+              <label>提交日期<input id="imageTextDateFilter" type="date" /></label>
+              <label>状态<select id="imageTextStatusFilter"><option value="">全部状态</option><option value="pending">待审核</option><option value="approved">已通过</option><option value="rejected">已驳回</option></select></label>
+              <label>审核人<select id="imageTextReviewerFilter"><option value="">全部审核人</option><option>张审核</option><option>李安全</option></select></label>
+              <label>排序<select id="imageTextSortFilter"><option value="oldest" selected>早提交优先</option><option value="latest">最新提交优先</option></select></label>
+              <div class="tag-filter-group field-full"><span class="filter-label">机器审核结果</span><div class="multi-select" id="imageTextMachineTagSelect"><button class="multi-select-trigger" id="imageTextMachineTagTrigger" type="button" aria-expanded="false">选择机审、风控或驳回理由 <span>⌄</span></button><div class="multi-select-menu" id="imageTextMachineTagMenu" hidden><div class="option-group"><strong>机审</strong><label><input type="checkbox" name="imageTextMachineTagFilter" value="集团机审:通过" />通过</label><label><input type="checkbox" name="imageTextMachineTagFilter" value="集团机审:风险" />风险</label></div><div class="option-group"><strong>风控</strong><label><input type="checkbox" name="imageTextMachineTagFilter" value="安全风控:通过" />通过</label><label><input type="checkbox" name="imageTextMachineTagFilter" value="安全风控:需关注" />需关注</label></div><div class="option-group"><strong>驳回理由</strong><label><input type="checkbox" name="imageTextMachineTagFilter" value="人工驳回说明:有" />人工驳回说明</label><label><input type="checkbox" name="imageTextMachineTagFilter" value="P0:政治敏感" />P0 · 政治敏感</label><label><input type="checkbox" name="imageTextMachineTagFilter" value="P1:版权风险" />P1 · 版权风险</label><label><input type="checkbox" name="imageTextMachineTagFilter" value="P1:色情低俗" />P1 · 色情低俗</label><label><input type="checkbox" name="imageTextMachineTagFilter" value="P1:知识明显错误" />P1 · 知识明显错误</label><label><input type="checkbox" name="imageTextMachineTagFilter" value="P2:广告导流" />P2 · 广告导流</label></div></div></div></div>
+            </div>
+            <button class="primary-button filter-submit" id="applyImageTextFilters" type="button">筛选内容</button>
+            <div class="list-divider"></div>
+            <div class="video-list" id="imageTextList" aria-live="polite"></div>
+          </section>
+
+          <section class="preview-column">
+            <div class="video-stage panel image-text-stage" id="imageTextStage"></div>
+            <div class="preview-meta"><span>图文预览 · 视频封面图</span></div>
+          </section>
+
+          <aside class="insight-column" id="imageTextInsightColumn"></aside>
+        </div>
+      </section>
+
       <section class="view" id="logsView" aria-labelledby="logsTitle">
         <header class="page-header logs-header">
           <div><div class="eyebrow">AUDIT TRAIL</div><h1 id="logsTitle">操作记录</h1><p>每一次决定都有依据，每一次变更都有记录。</p></div>
           <div class="trace-badge"><span>♢</span> 全程留痕</div>
         </header>
         <section class="logs-panel panel">
-          <div class="logs-summary"><div><strong>全部视频</strong><span class="summary-count" id="logCount">0</span></div><span class="priority-label">按视频汇总 · 最近操作优先</span></div>
+          <div class="logs-summary"><div><strong>全部内容</strong><span class="summary-count" id="logCount">0</span></div><span class="priority-label">按内容汇总 · 最近操作优先</span></div>
           <div class="logs-filters">
-            <label>操作类型<select id="logTypeFilter"><option value="">全部类型</option><option value="登录">登录</option><option value="视频审核">视频审核</option><option value="改判">改判</option></select></label>
+            <label>操作类型<select id="logTypeFilter"><option value="">全部类型</option><option value="登录">登录</option><option value="视频审核">视频审核</option><option value="图文审核">图文审核</option><option value="改判">改判</option></select></label>
             <label>操作人工号<input id="operatorFilter" type="search" placeholder="输入完整工号" /></label>
-            <label>目标编号<input id="targetFilter" type="search" placeholder="视频 ID 或员工号" /></label>
+            <label>目标编号<input id="targetFilter" type="search" placeholder="视频/图文 ID 或员工号" /></label>
             <button class="primary-button" id="applyLogFilters" type="button">筛选记录</button>
             <button class="text-button" id="resetLogFilters" type="button">重置</button>
           </div>

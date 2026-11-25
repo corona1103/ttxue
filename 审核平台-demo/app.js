@@ -5,6 +5,13 @@ const videos = [
   { id: 'b7d09f31e78b4a8e9050c8f152b1c2d3', title: '把春天装进一杯茶里', business: '创作者中心', producer: '官方账号', author: { name: '茶里春风', id: 'official_0088' }, reviewer: '李安全', submittedAt: '2026-10-29 18:54', status: 'approved', duration: '00:36', scene: '美食生活', ai: { risk: '低风险', reason: '画面与音频内容均通过模型检测', tags: ['食品安全', '画面合规'], safety: '通过', rules: 0 }, reviewTags: ['集团机审:通过', '安全风控:通过', '人工驳回说明:无'], specialTags: ['优质'], authorTags: ['优质'], workTags: [], finalResult: '已通过', finalBy: '李安全', finalAt: '2026-10-30 09:16', reasons: [] }
 ];
 
+const imageTextItems = [
+  { id: 'it_20261125001', contentType: 'video', title: '孩子为什么总是拖延写作业？', coverTheme: 'study', business: '创作者上传', producer: '个人创作者', author: { name: '成长观察室', id: 'u_210381' }, reviewer: '张审核', submittedAt: '2026-11-25 15:18', status: 'pending', ai: { risk: '中风险', reason: '标题与封面组合疑似存在营销导流表达，需要人工确认内容是否具有明确课程推广意图。', tags: ['疑似营销导流', '标题需复核'], safety: '需关注', rules: 2 }, reviewTags: ['集团机审:风险', '安全风控:需关注', 'P2:广告导流'], finalResult: '待人工确认', finalBy: '—', finalAt: '—', reasons: [] },
+  { id: 'it_20261125002', contentType: 'collection', title: '三分钟看懂浮力：阿基米德原理', coverTheme: 'science', business: '创作者上传', producer: '机构账号', author: { name: '理科小讲堂', id: 'org_520019' }, reviewer: '李安全', submittedAt: '2026-11-25 14:52', status: 'approved', ai: { risk: '低风险', reason: '标题和封面图未发现违规或误导性表达。', tags: ['知识科普', '画面合规'], safety: '通过', rules: 0 }, reviewTags: ['集团机审:通过', '安全风控:通过'], finalResult: '已通过', finalBy: '李安全', finalAt: '2026-11-25 15:06', reasons: [] },
+  { id: 'it_20261125003', contentType: 'video', title: '这5个学习方法，考试前一定要收藏', coverTheme: 'tips', business: 'aigc量产', producer: '个人创作者', author: { name: '高效学习社', id: 'u_883012' }, reviewer: '张审核', submittedAt: '2026-11-25 13:41', status: 'rejected', ai: { risk: '高风险', reason: '封面出现夸张承诺式文案，标题存在明显效果保证倾向。', tags: ['夸张承诺', '封面文案风险'], safety: '需关注', rules: 1 }, reviewTags: ['集团机审:风险', '安全风控:需关注', 'P1:知识明显错误', '人工驳回说明:有'], finalResult: '已驳回', finalBy: '张审核', finalAt: '2026-11-25 14:02', reasons: ['封面文案存在夸张承诺', '请修改标题和封面后重新提交'] },
+  { id: 'it_20261125004', contentType: 'collection', title: '春日便当：低脂高蛋白搭配', coverTheme: 'food', business: '创作者上传', producer: '官方账号', author: { name: '天天学食堂', id: 'official_0112' }, reviewer: '李安全', submittedAt: '2026-11-25 12:29', status: 'pending', ai: { risk: '低风险', reason: '标题和封面图通过初步检测，等待人工确认。', tags: ['食品安全', '画面清晰'], safety: '通过', rules: 0 }, reviewTags: ['集团机审:通过', '安全风控:通过'], finalResult: '待人工确认', finalBy: '—', finalAt: '—', reasons: [] }
+];
+
 let logs = [
   { time: '2026-10-30 14:45', operator: '373834', operatorName: '张审核', type: '登录', target: '373834', result: '登录成功', status: 'approved', evidence: '—' },
   { time: '2026-10-30 14:34', operator: '403592', operatorName: '李安全', type: '登录', target: '403592', result: '登录成功', status: 'approved', evidence: '—' },
@@ -17,6 +24,8 @@ let logs = [
 
 let selectedId = videos[0].id;
 let filteredVideos = [...videos];
+let selectedImageTextId = imageTextItems[imageTextItems.length - 1].id;
+let filteredImageTextItems = [...imageTextItems].sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
 let currentView = 'queue';
 let selectedIds = new Set();
 let batchAction = 'approve';
@@ -31,6 +40,7 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 const statusLabel = { pending: '待审核', approved: '已通过', rejected: '已驳回' };
+const imageTextTypeLabel = { video: '视频封面标题', collection: '合集封面标题' };
 const statusClass = (status) => status === 'pending' ? 'pending' : status === 'rejected' ? 'rejected' : 'approved';
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 
@@ -49,7 +59,7 @@ function renderVideoList() {
       <div class="video-item-author change-highlight-inline">作者：${escapeHtml(video.author.name)} <span>${escapeHtml(video.author.id)}</span>${video.authorTags.length ? `<span class="author-tag-inline">${video.authorTags.map((tag) => escapeHtml(tag)).join(' · ')}</span>` : ''}</div>
       <div class="video-item-id">视频 #${escapeHtml(video.id)}</div>
     </article>`).join('');
-  $$('.video-item').forEach((item) => {
+  $$('.video-item[data-video-id]').forEach((item) => {
     item.addEventListener('click', (event) => { if (!event.target.closest('.video-select')) selectVideo(item.dataset.videoId); });
     item.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') selectVideo(item.dataset.videoId); });
   });
@@ -101,6 +111,142 @@ function renderQueue() {
 }
 
 function selectVideo(id) { selectedId = id; renderQueue(); }
+
+function renderImageTextList() {
+  const list = $('#imageTextList');
+  $('#imageTextResultCount').textContent = `${filteredImageTextItems.length} 条`;
+  $('#imageTextCount').textContent = imageTextItems.filter((item) => item.status === 'pending').length;
+  if (!filteredImageTextItems.length) {
+    list.innerHTML = '<div class="empty-state">没有匹配的图文内容<br>请调整筛选条件后重试</div>';
+    return;
+  }
+  list.innerHTML = filteredImageTextItems.map((item) => `
+    <article class="video-item ${item.id === selectedImageTextId ? 'is-selected' : ''}" data-image-text-id="${item.id}" tabindex="0" role="button" aria-label="查看 ${escapeHtml(item.title)}">
+      <div class="video-item-top"><div class="video-item-heading"><div class="video-item-title">${escapeHtml(item.title)}</div></div><div class="video-item-statuses"><span class="content-type-pill">${escapeHtml(imageTextTypeLabel[item.contentType])}</span><span class="status-pill ${statusClass(item.status)}">${statusLabel[item.status]}</span></div></div>
+      <div class="video-item-meta">${escapeHtml(item.submittedAt)} · ${escapeHtml(item.producer)}</div>
+      <div class="video-item-author">作者：${escapeHtml(item.author.name)} <span>${escapeHtml(item.author.id)}</span></div>
+      <div class="video-item-id">图文 #${escapeHtml(item.id)}</div>
+    </article>`).join('');
+  $$('.video-item[data-image-text-id]').forEach((item) => {
+    item.addEventListener('click', () => selectImageText(item.dataset.imageTextId));
+    item.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') selectImageText(item.dataset.imageTextId); });
+  });
+}
+
+function renderImageTextStage(item) {
+  if (!item) {
+    $('#imageTextStage').innerHTML = '<div class="empty-state">暂无图文预览</div>';
+    return;
+  }
+  const typeLabel = imageTextTypeLabel[item.contentType];
+  const typeCode = item.contentType === 'collection' ? 'COLLECTION COVER TITLE' : 'VIDEO COVER TITLE';
+  const titleLabel = item.contentType === 'collection' ? '合集封面标题' : '视频封面标题';
+  $('#imageTextStage').innerHTML = `
+    <div class="image-text-cover theme-${escapeHtml(item.coverTheme)}"><div class="cover-glow"></div><div class="cover-grid"></div><div class="cover-copy"><small>天天学 · ${typeCode}</small><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(typeLabel)} · 用户修改后的封面图</span></div></div>
+    <div class="image-text-title"><span>${escapeHtml(titleLabel)}</span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.business)} · ${escapeHtml(item.id)}</small></div>`;
+}
+
+function renderImageTextInsight(item) {
+  if (!item) { $('#imageTextInsightColumn').innerHTML = ''; return; }
+  const reasons = item.reasons.length ? item.reasons.map((reason) => `<div class="reason-item">${escapeHtml(reason)}</div>`).join('') : '<div class="ai-message">请选择驳回理由并补充具体说明</div>';
+  const actionArea = item.status === 'pending' ? `
+    <form class="reject-form" id="imageTextRejectForm">
+      <label class="reason-label" for="imageTextRejectPreset">驳回理由（必选）</label>
+      <select id="imageTextRejectPreset"><option value="">选择驳回理由</option><option value="标题与内容不符">标题与内容不符</option><option value="封面图存在违规元素">封面图存在违规元素</option><option value="存在夸张承诺或误导表达">存在夸张承诺或误导表达</option><option value="素材版权信息不完整">素材版权信息不完整</option></select>
+      <label class="reason-label" for="imageTextRejectReason">补充说明（必填）</label>
+      <input id="imageTextRejectReason" type="text" placeholder="请输入具体驳回说明" />
+      <div class="review-actions"><button class="approve-button" id="approveImageText" type="button">✓ 通过</button><button class="confirm-reject" type="submit">× 驳回</button></div>
+    </form>` : '<div class="review-actions"><button class="ghost-button" type="button" disabled>本轮已完成审核</button></div>';
+  $('#imageTextInsightColumn').innerHTML = `
+    <section class="insight-card"><h3>当前最终结果 <span>${statusLabel[item.status]}</span></h3><div class="card-rule"></div><div class="result-detail"><strong>${escapeHtml(item.finalResult)}</strong><br>${escapeHtml(item.finalBy)} · ${escapeHtml(item.finalAt)}<br><span>${item.status === 'rejected' ? '可修改标题和封面后重新提交' : item.status === 'approved' ? '图文审核结论已生效' : '等待人工审核结论'}</span></div></section>
+    <section class="insight-card"><h3>AI 机审风险 <span>${item.ai.rules} 条命中</span></h3><div class="card-rule"></div><div class="ai-message">${escapeHtml(item.ai.reason)}</div><div class="ai-tag-row">${item.ai.tags.map((tag) => `<span class="ai-tag">${escapeHtml(tag)}</span>`).join('')}</div></section>
+    <section class="insight-card"><h3>安全风控 <span>AI 机器审核</span></h3><div class="card-rule"></div><div class="risk-state ${item.ai.safety === '通过' ? '' : 'risk-state-warning'}"><strong>${escapeHtml(item.ai.safety)}</strong><small>命中 ${item.ai.rules} 条规则</small></div></section>
+    <section class="insight-card"><h3>驳回原因 <span>${item.reasons.length}</span></h3><div class="card-rule"></div><div class="reason-list">${reasons}</div>${actionArea}</section>`;
+  bindImageTextReviewActions(item);
+}
+
+function renderImageTextQueue() {
+  renderImageTextList();
+  const selected = imageTextItems.find((item) => item.id === selectedImageTextId) || filteredImageTextItems[0];
+  if (selected && selected.id !== selectedImageTextId) selectedImageTextId = selected.id;
+  renderImageTextStage(selected);
+  renderImageTextInsight(selected);
+}
+
+function selectImageText(id) { selectedImageTextId = id; renderImageTextQueue(); }
+
+function getImageTextFilters() {
+  return { business: $('#imageTextBusinessFilter').value, producer: $('#imageTextProducerFilter').value, contentType: $('#imageTextContentTypeFilter').value, authorName: $('#imageTextAuthorNameFilter').value.trim().toLowerCase(), authorId: $('#imageTextAuthorIdFilter').value.trim().toLowerCase(), keyword: $('#imageTextKeywordFilter').value.trim().toLowerCase(), date: $('#imageTextDateFilter').value, status: $('#imageTextStatusFilter').value, reviewer: $('#imageTextReviewerFilter').value, machineTags: $$('input[name="imageTextMachineTagFilter"]:checked').map((input) => input.value), sort: $('#imageTextSortFilter').value };
+}
+
+function applyImageTextFilters() {
+  const filter = getImageTextFilters();
+  filteredImageTextItems = imageTextItems.filter((item) => {
+    const keywordMatch = !filter.keyword || `${item.title} ${item.id}`.toLowerCase().includes(filter.keyword);
+    const authorNameMatch = !filter.authorName || item.author.name.toLowerCase().includes(filter.authorName);
+    const authorIdMatch = !filter.authorId || item.author.id.toLowerCase().includes(filter.authorId);
+    const machineMatch = !filter.machineTags.length || filter.machineTags.some((tag) => item.reviewTags.includes(tag));
+    return (!filter.business || item.business === filter.business) && (!filter.producer || item.producer === filter.producer) && (!filter.contentType || item.contentType === filter.contentType) && authorNameMatch && authorIdMatch && keywordMatch && (!filter.date || item.submittedAt.startsWith(filter.date)) && (!filter.status || item.status === filter.status) && (!filter.reviewer || item.reviewer === filter.reviewer) && machineMatch;
+  });
+  filteredImageTextItems.sort((a, b) => filter.sort === 'oldest' ? a.submittedAt.localeCompare(b.submittedAt) : b.submittedAt.localeCompare(a.submittedAt));
+  if (!filteredImageTextItems.some((item) => item.id === selectedImageTextId)) selectedImageTextId = filteredImageTextItems[0]?.id || '';
+  renderImageTextQueue();
+}
+
+function clearImageTextFilters() {
+  ['imageTextBusinessFilter', 'imageTextProducerFilter', 'imageTextContentTypeFilter', 'imageTextDateFilter', 'imageTextStatusFilter', 'imageTextReviewerFilter'].forEach((id) => { $(`#${id}`).value = ''; });
+  ['imageTextAuthorNameFilter', 'imageTextAuthorIdFilter', 'imageTextKeywordFilter'].forEach((id) => { $(`#${id}`).value = ''; });
+  $$('input[name="imageTextMachineTagFilter"]').forEach((input) => { input.checked = false; });
+  $('#imageTextSortFilter').value = 'oldest';
+  filteredImageTextItems = [...imageTextItems].sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
+  selectedImageTextId = filteredImageTextItems[0]?.id || '';
+  updateImageTextMachineTagTrigger();
+  renderImageTextQueue();
+}
+
+function updateImageTextMachineTagTrigger() {
+  const selected = $$('input[name="imageTextMachineTagFilter"]:checked');
+  const trigger = $('#imageTextMachineTagTrigger');
+  trigger.firstChild.textContent = selected.length ? `已选 ${selected.length} 项 ` : '选择机审、风控或驳回理由 ';
+}
+
+function toggleImageTextMachineTagMenu(force) {
+  const menu = $('#imageTextMachineTagMenu');
+  const open = typeof force === 'boolean' ? force : menu.hidden;
+  menu.hidden = !open;
+  $('#imageTextMachineTagTrigger').setAttribute('aria-expanded', String(open));
+}
+
+function addImageTextLog(item, result, evidence) {
+  const now = new Date();
+  const time = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  logs.unshift({ time, operator: '402797', operatorName: '张审核', type: '图文审核', target: `图文 #${item.id}`, result, status: item.status, evidence });
+}
+
+function bindImageTextReviewActions(item) {
+  const approve = $('#approveImageText');
+  if (approve) approve.addEventListener('click', () => {
+    const previous = item.finalResult;
+    item.status = 'approved'; item.finalResult = '已通过'; item.finalBy = '张审核'; item.finalAt = '刚刚'; item.reasons = [];
+    addImageTextLog(item, `${previous || '待审核'} → 已通过`, '人工确认标题与封面图合规');
+    filteredImageTextItems = imageTextItems.filter((entry) => filteredImageTextItems.some((filtered) => filtered.id === entry.id));
+    renderImageTextQueue(); showToast('图文审核通过，已写入操作记录');
+  });
+  const rejectForm = $('#imageTextRejectForm');
+  if (rejectForm) rejectForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const preset = $('#imageTextRejectPreset').value.trim();
+    const custom = $('#imageTextRejectReason').value.trim();
+    if (!preset || !custom) { showToast('请同时选择驳回理由并填写补充说明'); return; }
+    const reason = `${preset}：${custom}`;
+    const previous = item.finalResult;
+    item.status = 'rejected'; item.finalResult = '已驳回'; item.finalBy = '张审核'; item.finalAt = '刚刚'; item.reasons = [reason];
+    item.reviewTags = item.reviewTags.filter((tag) => !tag.startsWith('人工驳回说明:')); item.reviewTags.push('人工驳回说明:有');
+    addImageTextLog(item, `${previous || '待审核'} → 已驳回`, `人工驳回说明 · ${reason}`);
+    filteredImageTextItems = imageTextItems.filter((entry) => filteredImageTextItems.some((filtered) => filtered.id === entry.id));
+    renderImageTextQueue(); showToast('图文内容已驳回，理由已写入操作记录');
+  });
+}
 
 function getQueueFilters() {
   return { business: $('#businessFilter').value, producer: $('#producerFilter').value, authorName: $('#authorNameFilter').value.trim().toLowerCase(), authorId: $('#authorIdFilter').value.trim().toLowerCase(), keyword: $('#keywordFilter').value.trim().toLowerCase(), date: $('#dateFilter').value, status: $('#statusFilter').value, reviewer: $('#reviewerFilter').value, machineTags: $$('input[name="machineTagFilter"]:checked').map((input) => input.value), specialTags: $$('input[name="specialTagFilter"]:checked').map((input) => input.value), sort: $('#sortFilter').value };
@@ -227,7 +373,7 @@ function executeBatchAction() {
 function groupLogsByVideo(list) {
   const grouped = new Map();
   list.forEach((log) => {
-    if (!log.target.startsWith('视频 #')) return;
+    if (!log.target.startsWith('视频 #') && !log.target.startsWith('图文 #')) return;
     const key = log.target;
     if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key).push(log);
@@ -245,12 +391,13 @@ function renderLogs(list = logs) {
   }
   $('#logsBody').innerHTML = groups.map(([target, entries], index) => {
     const groupId = `log-group-${index}`;
-    const videoId = target.replace('视频 #', '');
-    const video = videos.find((item) => videoId === item.id);
-    const title = video ? video.title : '未匹配视频';
+    const isImageText = target.startsWith('图文 #');
+    const contentId = target.replace(/^视频 #|^图文 #/, '');
+    const content = (isImageText ? imageTextItems : videos).find((item) => contentId === item.id);
+    const title = content ? content.title : '未匹配内容';
     const latest = entries[0];
-    const finalStatus = video ? video.status : latest.status;
-    const finalResult = video ? normalizeResult(video.finalResult) : normalizeResult(latest.result);
+    const finalStatus = content ? content.status : latest.status;
+    const finalResult = content ? normalizeResult(content.finalResult) : normalizeResult(latest.result);
     const changes = entries.filter((log) => log.type === '改判' || log.result.includes('→')).length;
     const recent = entries.slice(0, 2).map((log) => `<span class="operation-summary-item"><b>${escapeHtml(formatShortDate(log.time))}</b> ${escapeHtml(log.operatorName)} <em>${escapeHtml(normalizeResult(log.result))}</em></span>`).join('');
     const notes = entries.slice(0, 2).map((log) => `<span class="operation-note-item">${escapeHtml(log.evidence || '暂无审核说明')}</span>`).join('');
@@ -273,9 +420,10 @@ function openLogDetail(groupId) {
   if (!group) return;
   activeLogGroupId = groupId;
   activeLogPage = 1;
-  const videoId = group.target.replace('视频 #', '');
-  const video = videos.find((item) => item.id === videoId);
-  $('#logDetailTitle').textContent = video ? video.title : '完整操作记录';
+  const isImageText = group.target.startsWith('图文 #');
+  const contentId = group.target.replace(/^视频 #|^图文 #/, '');
+  const content = (isImageText ? imageTextItems : videos).find((item) => item.id === contentId);
+  $('#logDetailTitle').textContent = content ? content.title : '完整操作记录';
   $('#logDetailTarget').textContent = group.target;
   renderLogDetailPage();
   $('#logDetailModal').hidden = false;
@@ -305,7 +453,7 @@ function resetLogFilters() { $('#logTypeFilter').value = ''; $('#operatorFilter'
 
 function showToast(message) { const toast = $('#toast'); toast.textContent = message; toast.classList.add('is-visible'); window.clearTimeout(showToast.timer); showToast.timer = window.setTimeout(() => toast.classList.remove('is-visible'), 2400); }
 
-function switchView(view) { currentView = view; $$('.nav-item').forEach((item) => item.classList.toggle('is-active', item.dataset.view === view)); $('#queueView').classList.toggle('is-visible', view === 'queue'); $('#logsView').classList.toggle('is-visible', view === 'logs'); if (view === 'logs') renderLogs(); }
+function switchView(view) { currentView = view; $$('.nav-item').forEach((item) => item.classList.toggle('is-active', item.dataset.view === view)); $('#queueView').classList.toggle('is-visible', view === 'queue'); $('#imageTextView').classList.toggle('is-visible', view === 'imageText'); $('#logsView').classList.toggle('is-visible', view === 'logs'); if (view === 'imageText') renderImageTextQueue(); if (view === 'logs') renderLogs(); }
 
 $$('.nav-item').forEach((item) => item.addEventListener('click', () => switchView(item.dataset.view)));
 $('#applyFilters').addEventListener('click', applyFilters);
@@ -316,6 +464,12 @@ document.addEventListener('click', (event) => { if (!event.target.closest('#mach
 $('#applyLogFilters').addEventListener('click', applyLogFilters);
 $('#resetLogFilters').addEventListener('click', resetLogFilters);
 $('#keywordFilter').addEventListener('keydown', (event) => { if (event.key === 'Enter') applyFilters(); });
+$('#applyImageTextFilters').addEventListener('click', applyImageTextFilters);
+$('#clearImageTextFilters').addEventListener('click', clearImageTextFilters);
+$('#imageTextMachineTagTrigger').addEventListener('click', () => toggleImageTextMachineTagMenu());
+$$('input[name="imageTextMachineTagFilter"]').forEach((input) => input.addEventListener('change', updateImageTextMachineTagTrigger));
+document.addEventListener('click', (event) => { if (!event.target.closest('#imageTextMachineTagSelect')) toggleImageTextMachineTagMenu(false); });
+$('#imageTextKeywordFilter').addEventListener('keydown', (event) => { if (event.key === 'Enter') applyImageTextFilters(); });
 $('#selectAllVideos').addEventListener('change', (event) => { filteredVideos.forEach((video) => event.target.checked ? selectedIds.add(video.id) : selectedIds.delete(video.id)); renderVideoList(); });
 $('#openBatchAction').addEventListener('click', openBatchModal);
 $('#closeBatchModal').addEventListener('click', closeBatchModal);
