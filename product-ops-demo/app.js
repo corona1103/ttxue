@@ -172,6 +172,10 @@ function init() {
   document.addEventListener("input", handleInput);
   document.addEventListener("change", handleChange);
   document.addEventListener("submit", handleSubmit);
+  document.addEventListener("mouseover", handleTrendMouseOver);
+  document.addEventListener("mouseout", handleTrendMouseOut);
+  document.addEventListener("focusin", handleTrendMouseOver);
+  document.addEventListener("focusout", handleTrendMouseOut);
   render();
 }
 
@@ -183,7 +187,7 @@ function parseHashRoute() {
 function defaultFilters(route) {
   if (route === "collections") return { collectionStatus: "on", collectionPeriod: "30" };
   if (route === "micro-course") return { microStatus: "on" };
-  if (route === "creator-income") return { incomeView: "authors", incomeMonth: "2026-10", incomeContract: "", incomeBank: "", incomeBdOwner: "" };
+  if (route === "creator-income") return { incomeView: "authors", incomeMonth: "2026-10", incomeContract: "", incomeBank: "", incomeBdOwner: "", incomeTrendRange: "30" };
   if (route === "creator-workboard") return { workboardView: "authors" };
   return {};
 }
@@ -219,6 +223,35 @@ function accountStatusTag(status) {
   const map = { done: ["status-on", "已完成"], pending: ["status-pending", "待完成"] };
   const [tone, label] = map[status] || ["status-off", "未完成"];
   return `<span class="status-tag ${tone}">${label}</span>`;
+}
+
+function contractStatusCell(account) {
+  const tag = accountStatusTag(account.contract);
+  return account.contract === "pending" ? `${tag}<button type="button" class="btn-text contract-copy-btn" data-action="copy-contract-link" data-author-id="${account.authorId}">复制合同链接</button>` : tag;
+}
+
+function copyText(value, successMessage) {
+  const notifySuccess = () => toast(successMessage);
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(value).then(notifySuccess).catch(() => fallbackCopyText(value, notifySuccess));
+    return;
+  }
+  fallbackCopyText(value, notifySuccess);
+}
+
+function fallbackCopyText(value, notifySuccess) {
+  const input = document.createElement("textarea");
+  input.value = value;
+  input.setAttribute("readonly", "");
+  input.style.position = "fixed";
+  input.style.opacity = "0";
+  document.body.appendChild(input);
+  input.select();
+  let copied = false;
+  try { copied = document.execCommand("copy"); } catch (error) { copied = false; }
+  input.remove();
+  if (copied) notifySuccess();
+  else toast(`合同链接：${value}`, "error");
 }
 
 function riskStatusTag(status, label) {
@@ -364,6 +397,62 @@ function renderObservationPanel(view, filterKey = "workboardKeyword") {
   return `${filter}${panel}`;
 }
 
+function formatTrendDate(date) {
+  return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function buildIncomeTrend(groups, range, incomeMonth) {
+  const nodeCount = range === "90" ? 90 : 30;
+  const [year, month] = (incomeMonth || "2026-10").split("-").map(Number);
+  const monthEndDay = new Date(year, month, 0).getDate();
+  const endDate = new Date(year, month - 1, Math.min(30, monthEndDay));
+  const dates = Array.from({ length: nodeCount }, (_, index) => {
+    const date = new Date(endDate);
+    date.setDate(endDate.getDate() - (nodeCount - 1 - index));
+    return date;
+  });
+  const grossBase = groups.reduce((sum, group) => sum + group.gross, 0);
+  const creatorBase = groups.reduce((sum, group) => sum + group.share, 0);
+  if (!grossBase && !creatorBase) return dates.map((date) => ({ date: formatTrendDate(date), platformTotal: 0, ugcRevenue: 0, creatorIncome: 0 }));
+  const ugcBase = Math.max(grossBase, creatorBase);
+  const platformBase = Math.max(ugcBase + 1, Math.round(ugcBase * 1.22));
+  return dates.map((date, index) => {
+    const wave = 0.88 + (Math.sin(index * 0.55) + 1) * 0.08 + ((index % 5) - 2) * 0.012;
+    const creatorIncome = Math.round(creatorBase * wave);
+    const ugcRevenue = Math.max(creatorIncome, Math.round(ugcBase * wave));
+    const platformTotal = Math.max(ugcRevenue + 1, Math.round(platformBase * wave));
+    return { date: formatTrendDate(date), platformTotal, ugcRevenue, creatorIncome };
+  });
+}
+
+function showTrendTooltip(target) {
+  const chartWrap = target.closest(".chart-wrap");
+  const tooltip = chartWrap?.querySelector(".trend-tooltip");
+  if (!chartWrap || !tooltip) return;
+  tooltip.innerHTML = `<strong>${escapeHtml(target.dataset.trendDate)}</strong><span><i class="tooltip-dot platform"></i>平台总流水 <b>${formatMoney(target.dataset.platformTotal)}</b></span><span><i class="tooltip-dot ugc"></i>UGC来源营收 <b>${formatMoney(target.dataset.ugcRevenue)}</b></span><span><i class="tooltip-dot creator"></i>创作者收入 <b>${formatMoney(target.dataset.creatorIncome)}</b></span>`;
+  tooltip.classList.add("is-visible");
+  const wrapRect = chartWrap.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  const left = Math.min(Math.max(targetRect.left - wrapRect.left + targetRect.width / 2 - tooltip.offsetWidth / 2, 6), wrapRect.width - tooltip.offsetWidth - 6);
+  const top = Math.max(targetRect.top - wrapRect.top - tooltip.offsetHeight - 10, 6);
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
+}
+
+function hideTrendTooltip(target) {
+  target.closest(".chart-wrap")?.querySelector(".trend-tooltip")?.classList.remove("is-visible");
+}
+
+function handleTrendMouseOver(event) {
+  const target = event.target.closest("[data-trend-index]");
+  if (target) showTrendTooltip(target);
+}
+
+function handleTrendMouseOut(event) {
+  const target = event.target.closest("[data-trend-index]");
+  if (target && !target.contains(event.relatedTarget)) hideTrendTooltip(target);
+}
+
 function renderCreatorIncomeBase() {
   const author = (state.filters.incomeAuthor || "").toLowerCase();
   const incomeMonth = state.filters.incomeMonth || "2026-10";
@@ -390,12 +479,39 @@ function renderCreatorIncomeBase() {
   const groups = [...groupedMap.values()];
   const bdOptions = bdOwners.map((owner) => `<option value="${owner.employeeId}" ${incomeBdOwner === owner.employeeId ? "selected" : ""}>${owner.name} · ${owner.employeeId}</option>`).join("");
   const filter = `<div class="card filter-card"><div class="filter-row"><span class="filter-label">收入筛选</span><div class="field-wrap"><span class="search-icon">⌕</span><input class="field search" data-filter="incomeAuthor" value="${escapeHtml(state.filters.incomeAuthor || "")}" placeholder="搜索创作者" /></div><select class="field select-field" data-filter="incomePeriod"><option value="">全部周期</option><option value="7" ${state.filters.incomePeriod === "7" ? "selected" : ""}>近 7 天</option><option value="30" ${state.filters.incomePeriod === "30" ? "selected" : ""}>近 30 天</option></select><select class="field select-field" data-filter="incomeContract"><option value="">全部签约状态</option><option value="done" ${incomeContract === "done" ? "selected" : ""}>已签约</option><option value="pending" ${incomeContract === "pending" ? "selected" : ""}>待签约</option></select><select class="field select-field" data-filter="incomeBank"><option value="">全部绑卡状态</option><option value="done" ${incomeBank === "done" ? "selected" : ""}>已绑卡</option><option value="pending" ${incomeBank === "pending" ? "selected" : ""}>待绑卡</option></select><select class="field select-field" data-filter="incomeBdOwner"><option value="">全部 BD 责任人</option><option value="unassigned" ${incomeBdOwner === "unassigned" ? "selected" : ""}>未分配</option>${bdOptions}</select><select class="field select-field month-select" data-filter="incomeMonth"><option value="2026-10" ${incomeMonth === "2026-10" ? "selected" : ""}>账期选择：2026 年 10 月</option><option value="2026-09" ${incomeMonth === "2026-09" ? "selected" : ""}>账期选择：2026 年 09 月</option></select><span class="filter-spacer"></span><button class="btn btn-small" data-action="clear-filters">清空筛选</button><button class="btn btn-small btn-primary" data-action="export-income">↓ 导出明细</button></div></div>`;
-  const trend = [40, 54, 48, 63, 57, 76, 68, 83, 72, 92, 78, 96];
-  const points = trend.map((v, i) => `${(i / (trend.length - 1) * 100).toFixed(2)},${(100 - v) * .82 + 8}`).join(" ");
-  const area = `0,100 ${points} 100,100`;
-  const rowsHtml = groups.map((group) => `<tr><td><div class="author-cell"><button class="creator-link" data-action="view-creator-diagnosis" data-author-id="${group.authorId}">${escapeHtml(group.author)}</button><span>${escapeHtml(group.authorId)}</span></div></td><td>${accountStatusTag(group.contract)}</td><td>${accountStatusTag(group.bank)}</td><td><span class="enterprise-cell">${escapeHtml(group.enterprise)}</span></td><td>${riskStatusTag(group.risk, group.riskText)}<span class="risk-detail">${escapeHtml(group.riskDetail)}</span></td><td>${renderBdOwnerCell(group)}</td><td class="mono">${group.collections.size} 个</td><td class="mono">${formatNumber(group.orders)}</td><td class="mono strong">${formatMoney(group.gross)}</td><td class="mono strong">${formatMoney(group.share)}</td><td class="action-col"><button class="btn-text danger" data-action="unbind-realname" data-author-id="${group.authorId}">解绑实名</button></td></tr>`).join("");
+  const trendRange = state.filters.incomeTrendRange || "30";
+  const trend = buildIncomeTrend(groups, trendRange, incomeMonth);
+  const trendValues = trend.flatMap((item) => [item.platformTotal, item.ugcRevenue, item.creatorIncome]);
+  const trendMin = Math.min(...trendValues);
+  const trendMax = Math.max(...trendValues);
+  const trendPadding = Math.max((trendMax - trendMin) * 0.12, 1);
+  const scaleMin = Math.max(0, trendMin - trendPadding);
+  const scaleMax = trendMax + trendPadding;
+  const chartY = (value) => 92 - ((value - scaleMin) / Math.max(scaleMax - scaleMin, 1)) * 82;
+  const chartX = (index) => trend.length === 1 ? 0 : (index / (trend.length - 1) * 100).toFixed(2);
+  const trendSeries = [
+    { key: "platformTotal", label: "平台总流水", color: "#5b5ce2" },
+    { key: "ugcRevenue", label: "UGC来源营收", color: "#e49a52" },
+    { key: "creatorIncome", label: "创作者收入", color: "#28b5a7" }
+  ];
+  const chartSvg = trendSeries.map((series) => {
+    const points = trend.map((item, index) => `${chartX(index)},${chartY(item[series.key]).toFixed(2)}`).join(" ");
+    return `<polyline points="${points}" fill="none" stroke="${series.color}" stroke-width="1.7" vector-effect="non-scaling-stroke"></polyline>`;
+  }).join("");
+  const chartHoverTargets = trend.map((item, index) => {
+    const currentX = Number(chartX(index));
+    const previousX = index === 0 ? 0 : Number(chartX(index - 1));
+    const nextX = index === trend.length - 1 ? 100 : Number(chartX(index + 1));
+    const start = index === 0 ? 0 : (previousX + currentX) / 2;
+    const end = index === trend.length - 1 ? 100 : (currentX + nextX) / 2;
+    return `<rect class="chart-hover-target" data-trend-index="${index}" data-trend-date="${item.date}" data-platform-total="${item.platformTotal}" data-ugc-revenue="${item.ugcRevenue}" data-creator-income="${item.creatorIncome}" x="${start.toFixed(2)}" y="0" width="${(end - start).toFixed(2)}" height="100" fill="#fff" fill-opacity="0" pointer-events="all" tabindex="0" aria-label="${escapeHtml(`${item.date} 收入趋势`)}"></rect>`;
+  }).join("");
+  const axisLabels = [0, 0.25, 0.5, 0.75, 1].map((ratio) => formatMoney(Math.round(trendMax - (trendMax - scaleMin) * ratio)));
+  const chartLabelIndexes = [...new Set([0, Math.round((trend.length - 1) * 0.25), Math.round((trend.length - 1) * 0.5), Math.round((trend.length - 1) * 0.75), trend.length - 1])];
+  const chartLabels = chartLabelIndexes.map((index) => `<span>${trend[index].date}</span>`).join("");
+  const rowsHtml = groups.map((group) => `<tr><td><div class="author-cell"><button class="creator-link" data-action="view-creator-diagnosis" data-author-id="${group.authorId}">${escapeHtml(group.author)}</button><span>${escapeHtml(group.authorId)}</span></div></td><td>${contractStatusCell(group)}</td><td>${accountStatusTag(group.bank)}</td><td><span class="enterprise-cell">${escapeHtml(group.enterprise)}</span></td><td>${riskStatusTag(group.risk, group.riskText)}<span class="risk-detail">${escapeHtml(group.riskDetail)}</span></td><td>${renderBdOwnerCell(group)}</td><td class="mono">${group.collections.size} 个</td><td class="mono">${formatNumber(group.orders)}</td><td class="mono strong">${formatMoney(group.gross)}</td><td class="mono strong">${formatMoney(group.share)}</td><td class="action-col"><button class="btn-text danger" data-action="unbind-realname" data-author-id="${group.authorId}">解绑实名</button></td></tr>`).join("");
   const table = groups.length ? `<table class="merged-account-table"><thead><tr class="table-group-row"><th rowspan="2">创作者</th><th colspan="5">账号与风控</th><th colspan="4">收入汇总</th><th rowspan="2" class="action-col">操作</th></tr><tr><th>合同签约</th><th>银行卡</th><th>关联企业</th><th>安全风险</th><th>BD 责任人</th><th>合集数</th><th>总订单</th><th>总收入</th><th>创作者分成</th></tr></thead><tbody>${rowsHtml}</tbody></table>` : emptyState("暂无匹配创作者", "调整作者、签约、绑卡或 BD 责任人筛选试试");
-  return `${pageHead("创作者运营", "创作者收入", "按创作者和时间周期汇总查看收入分成与账号状态。") }<div class="metric-grid account-metrics">${metricCard("实名完成率", `${completedRate("verified")}<small>%</small>`, `${filteredAccounts.length} 位创作者`, "✓")}${metricCard("合同签约率", `${completedRate("contract")}<small>%</small>`, "影响合作与结算", "▣")}${metricCard("银行卡绑定率", `${completedRate("bank")}<small>%</small>`, "影响打款资格", "¥")}${metricCard("风险待处理", riskCount, riskCount ? "需运营复核" : "暂无风险", "!", riskCount ? "down" : "")}</div><div class="finance-grid"><div class="card chart-card"><div class="insight-head"><div><div class="insight-title">收入趋势</div><div class="insight-sub">近 12 个数据节点 · 单位：元</div></div><select class="duration-select"><option>近 30 天</option><option>近 90 天</option></select></div><div class="chart-wrap"><svg class="chart-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="${area}" fill="rgba(91,92,226,.08)"></polygon><polyline points="${points}" fill="none" stroke="#5b5ce2" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>${trend.map((v, i) => `<circle cx="${(i / (trend.length - 1) * 100).toFixed(2)}" cy="${(100 - v) * .82 + 8}" r="1.5" fill="#fff" stroke="#5b5ce2" stroke-width="1" vector-effect="non-scaling-stroke"></circle>`).join("")}</svg></div><div class="chart-labels"><span>10/01</span><span>10/07</span><span>10/14</span><span>10/21</span><span>10/28</span></div><div class="chart-legend"><span><i class="line-dot"></i>平台流水</span><span><i class="line-dot green"></i>创作者分成</span></div></div><div class="card quick-card"><h3>收入贡献 Top 3</h3><div class="quick-list"><div class="quick-item"><div class="quick-rank">1</div><div><strong>周老师的奇妙课</strong><span>6 个合集 · 贡献 28%</span></div><div class="quick-value">¥48,620</div></div><div class="quick-item"><div class="quick-rank">2</div><div><strong>林间心理屋</strong><span>3 个合集 · 贡献 19%</span></div><div class="quick-value">¥32,780</div></div><div class="quick-item"><div class="quick-rank">3</div><div><strong>朵朵讲故事</strong><span>5 个合集 · 贡献 16%</span></div><div class="quick-value">¥28,140</div></div></div><div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:11px">当前筛选共有 <strong style="color:var(--text)">${groups.length}</strong> 位创作者</div></div></div>${filter}<div class="card table-card"><div class="table-head"><div><span class="table-title">创作者收入与账号状态</span><span class="table-caption">共 ${groups.length} 位创作者 · 资料状态影响结算资格</span></div><span class="sortable-hint">BD 责任人可单独维护</span></div><div class="table-wrap">${table}</div></div>`;
+  return `${pageHead("创作者运营", "创作者收入", "按创作者和时间周期汇总查看收入分成与账号状态。") }<div class="metric-grid account-metrics">${metricCard("实名完成率", `${completedRate("verified")}<small>%</small>`, `${filteredAccounts.length} 位创作者`, "✓")}${metricCard("合同签约率", `${completedRate("contract")}<small>%</small>`, "影响合作与结算", "▣")}${metricCard("银行卡绑定率", `${completedRate("bank")}<small>%</small>`, "影响打款资格", "¥")}${metricCard("风险待处理", riskCount, riskCount ? "需运营复核" : "暂无风险", "!", riskCount ? "down" : "")}</div><div class="finance-grid"><div class="card chart-card"><div class="insight-head"><div><div class="insight-title">收入趋势</div><div class="insight-sub">近 ${trendRange} 天 · 每日数据 · 单位：元</div></div><select class="duration-select" data-filter="incomeTrendRange" aria-label="收入趋势时间范围"><option value="30" ${trendRange === "30" ? "selected" : ""}>近 30 天</option><option value="90" ${trendRange === "90" ? "selected" : ""}>近 90 天</option></select></div><div class="chart-with-axis"><div class="chart-y-axis">${axisLabels.map((label) => `<span>${label}</span>`).join("")}</div><div class="chart-wrap"><svg class="chart-svg" viewBox="0 0 100 100" preserveAspectRatio="none">${chartSvg}${chartHoverTargets}</svg><div class="trend-tooltip" role="status" aria-live="polite"></div></div></div><div class="chart-labels">${chartLabels}</div><div class="chart-legend"><span><i class="line-dot"></i>平台总流水</span><span><i class="line-dot orange"></i>UGC来源营收</span><span><i class="line-dot green"></i>创作者收入</span></div></div><div class="card quick-card"><h3>收入贡献 Top 3</h3><div class="quick-list"><div class="quick-item"><div class="quick-rank">1</div><div><strong>周老师的奇妙课</strong><span>6 个合集 · 贡献 28%</span></div><div class="quick-value">¥48,620</div></div><div class="quick-item"><div class="quick-rank">2</div><div><strong>林间心理屋</strong><span>3 个合集 · 贡献 19%</span></div><div class="quick-value">¥32,780</div></div><div class="quick-item"><div class="quick-rank">3</div><div><strong>朵朵讲故事</strong><span>5 个合集 · 贡献 16%</span></div><div class="quick-value">¥28,140</div></div></div><div class="quick-status-placeholder"></div></div></div>${filter}<div class="card table-card"><div class="table-head"><div><span class="table-title">创作者收入与账号状态</span><span class="table-caption">共 ${groups.length} 位创作者 · 资料状态影响结算资格</span></div><span class="sortable-hint">BD 责任人可单独维护</span></div><div class="table-wrap">${table}</div></div>`;
 }
 
 function renderCreatorIncome() {
@@ -410,7 +526,7 @@ function renderCreatorIncome() {
   const rate = (key) => accounts.length ? Math.round(accounts.filter((account) => account[key] === "done").length / accounts.length * 100) : 0;
   let html = renderCreatorIncomeBase();
   html = html.replace(/<div class="metric-grid account-metrics">[\s\S]*?<\/div><div class="finance-grid">/, '<div class="finance-grid">');
-  return html.replace(/(<div style="margin-top:20px; padding-top:14px; border-top:1px solid var\(--line\); color:var\(--muted\); font-size:11px">[\s\S]*?<\/div>)(<\/div><\/div><div class="card filter-card">)/, `$1<div class="quick-status-row"><span>签约率 <strong>${rate("contract")}%</strong></span><span>绑卡率 <strong>${rate("bank")}%</strong></span></div>$2`);
+  return html.replace(/<div class="quick-status-placeholder"><\/div>/, `<div class="quick-status-row"><span>签约率 <strong>${rate("contract")}%</strong></span><span>绑卡率 <strong>${rate("bank")}%</strong></span></div>`);
 }
 
 function renderCreatorWorkboard() {
@@ -513,6 +629,12 @@ function handleClick(event) {
   if (action === "set-income-view") { state.filters.incomeView = target.dataset.view || "authors"; render(); return; }
   if (action === "set-workboard-view") { state.filters.workboardView = target.dataset.view || "authors"; render(); return; }
   if (action === "view-creator-diagnosis") { location.hash = `#/creator-diagnosis/${target.dataset.authorId}`; return; }
+  if (action === "copy-contract-link") {
+    const account = creatorAccounts.find((item) => item.authorId === target.dataset.authorId);
+    if (!account) return;
+    copyText(`https://ops.ttxue.cn/contracts/${encodeURIComponent(account.authorId)}`, "合同链接已复制");
+    return;
+  }
   if (action === "unbind-realname") {
     const account = creatorAccounts.find((item) => item.authorId === target.dataset.authorId);
     if (!account) return;
