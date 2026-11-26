@@ -116,15 +116,19 @@ button { cursor: pointer; }
 .merged-account-table { min-width: 0; width: 100%; table-layout: fixed; }
 .merged-account-table th, .merged-account-table td { padding: 8px 6px; font-size: 10px; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; }
 .merged-account-table th:first-child, .merged-account-table td:first-child { width: 125px; min-width: 125px; }
-.merged-account-table tbody td:nth-child(2), .merged-account-table thead tr:nth-child(2) th:nth-child(1) { width: 64px; }
-.merged-account-table tbody td:nth-child(3), .merged-account-table thead tr:nth-child(2) th:nth-child(2) { width: 58px; }
-.merged-account-table tbody td:nth-child(4), .merged-account-table thead tr:nth-child(2) th:nth-child(3) { width: 105px; }
-.merged-account-table tbody td:nth-child(5), .merged-account-table thead tr:nth-child(2) th:nth-child(4) { width: 100px; }
-.merged-account-table tbody td:nth-child(6), .merged-account-table thead tr:nth-child(2) th:nth-child(5) { width: 80px; }
-.merged-account-table tbody td:nth-child(7), .merged-account-table thead tr:nth-child(2) th:nth-child(6) { width: 55px; }
-.merged-account-table tbody td:nth-child(8), .merged-account-table thead tr:nth-child(2) th:nth-child(7) { width: 58px; }
-.merged-account-table tbody td:nth-child(9), .merged-account-table thead tr:nth-child(2) th:nth-child(8) { width: 72px; }
-.merged-account-table tbody td:nth-child(10), .merged-account-table thead tr:nth-child(2) th:nth-child(9) { width: 78px; }
+.merged-account-table tbody td:nth-child(2) { width: 92px; min-width: 92px; }
+.merged-account-table tbody td:nth-child(3), .merged-account-table thead tr:nth-child(2) th:nth-child(1) { width: 64px; }
+.merged-account-table tbody td:nth-child(4), .merged-account-table thead tr:nth-child(2) th:nth-child(2) { width: 58px; }
+.merged-account-table tbody td:nth-child(5), .merged-account-table thead tr:nth-child(2) th:nth-child(3) { width: 105px; }
+.merged-account-table tbody td:nth-child(6), .merged-account-table thead tr:nth-child(2) th:nth-child(4) { width: 100px; }
+.merged-account-table tbody td:nth-child(7), .merged-account-table thead tr:nth-child(2) th:nth-child(5) { width: 55px; }
+.merged-account-table tbody td:nth-child(8), .merged-account-table thead tr:nth-child(2) th:nth-child(6) { width: 58px; }
+.merged-account-table tbody td:nth-child(9), .merged-account-table thead tr:nth-child(2) th:nth-child(7) { width: 72px; }
+.merged-account-table tbody td:nth-child(10), .merged-account-table thead tr:nth-child(2) th:nth-child(8) { width: 78px; }
+.merged-account-table .table-group-row th:nth-child(2), .merged-account-table tbody td:nth-child(2) { position: sticky; left: 125px; z-index: 2; box-shadow: 10px 0 16px -15px rgba(35, 45, 80, .35); }
+.merged-account-table .table-group-row th:nth-child(2) { background: #f7f8fc; z-index: 5; }
+.merged-account-table tbody td:nth-child(2) { background: #fff; }
+.merged-account-table tbody tr:hover td:nth-child(2) { background: #fcfcff; }
 .merged-account-table th.action-col, .merged-account-table td.action-col { width: 72px; min-width: 72px; padding-left: 5px; padding-right: 5px; white-space: nowrap; }
 .enterprise-cell { color: var(--text); font-size: 12px; }
 .risk-detail { display: block; margin-top: 3px; color: var(--subtle); font-size: 10px; }
@@ -264,6 +268,11 @@ tbody tr:hover { background: #fcfcff; }
 .free { color: #8b94a6; background: #f4f5f7; }
 .link-id { color: var(--primary); cursor: pointer; font-variant-numeric: tabular-nums; }
 .row-actions { display: flex; align-items: center; gap: 10px; }
+.action-stack { flex-direction: column; align-items: flex-start; gap: 2px; }
+.table-sort-button { display: inline-flex; align-items: center; gap: 3px; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.table-sort-button:hover, .table-sort-button.is-active { color: var(--primary); }
+.table-sort-icon { color: #aab2c1; font-size: 11px; line-height: 1; }
+.table-sort-button.is-active .table-sort-icon { color: var(--primary); font-weight: 700; }
 .row-actions .btn-text.danger { color: var(--red); }
 .empty { text-align: center; padding: 58px 20px; color: var(--muted); }
 .empty-icon { margin: 0 auto 10px; width: 38px; height: 38px; border-radius: 50%; background: #f1f2f8; color: #a6aec0; display: grid; place-items: center; font-size: 18px; }
@@ -396,6 +405,10 @@ tbody tr:hover { background: #fcfcff; }
 .modal-head h2 { margin: 0; font-size: 16px; }
 .modal-head p { color: var(--muted); font-size: 11px; margin: 4px 0 0; }
 .modal-body { padding: 18px 21px 21px; }
+.phone-info { padding: 15px; border: 1px solid var(--line); border-radius: 10px; background: #f8f9fc; }
+.phone-info span, .phone-display { display: block; }
+.phone-info span { color: var(--muted); font-size: 11px; }
+.phone-display { margin-top: 8px; color: var(--text); font-size: 24px; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .form-field { display: flex; flex-direction: column; gap: 6px; }
 .form-field.full { grid-column: 1 / -1; }

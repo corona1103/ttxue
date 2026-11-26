@@ -36,12 +36,12 @@ incomeRows.forEach((row, index) => {
 });
 
 const creatorAccounts = [
-  { author: "周老师的奇妙课", authorId: "AUTH-10018", verified: "done", contract: "done", bank: "done", enterprise: "天天学教研工作室", risk: "normal", riskText: "正常", riskDetail: "未发现异常" },
-  { author: "林间心理屋", authorId: "AUTH-10021", verified: "done", contract: "done", bank: "done", enterprise: "林间心理屋工作室", risk: "watch", riskText: "需关注", riskDetail: "疑似恶意洗稿 · 相似度命中 2 次" },
-  { author: "朵朵讲故事", authorId: "AUTH-10024", verified: "done", contract: "pending", bank: "pending", enterprise: "个人主体", risk: "normal", riskText: "正常", riskDetail: "未发现异常" },
-  { author: "墨水工作室", authorId: "AUTH-10031", verified: "done", contract: "done", bank: "done", enterprise: "墨水内容工作室", risk: "review", riskText: "需复核", riskDetail: "疑似刷单作弊 · 订单行为异常" },
-  { author: "大象叔叔", authorId: "AUTH-10035", verified: "done", contract: "done", bank: "done", enterprise: "个人主体", risk: "normal", riskText: "正常", riskDetail: "未发现异常" },
-  { author: "橙子老师", authorId: "AUTH-10041", verified: "pending", contract: "pending", bank: "pending", enterprise: "个人主体", risk: "profile", riskText: "需补资料", riskDetail: "实名认证资料未齐全" }
+  { author: "周老师的奇妙课", authorId: "AUTH-10018", phone: "13800001018", verified: "done", contract: "done", bank: "done", enterprise: "天天学教研工作室", risk: "normal", riskText: "正常", riskDetail: "未发现异常" },
+  { author: "林间心理屋", authorId: "AUTH-10021", phone: "13800001021", verified: "done", contract: "done", bank: "done", enterprise: "林间心理屋工作室", risk: "watch", riskText: "需关注", riskDetail: "疑似恶意洗稿 · 相似度命中 2 次" },
+  { author: "朵朵讲故事", authorId: "AUTH-10024", phone: "13800001024", verified: "done", contract: "pending", bank: "pending", enterprise: "个人主体", risk: "normal", riskText: "正常", riskDetail: "未发现异常" },
+  { author: "墨水工作室", authorId: "AUTH-10031", phone: "13800001031", verified: "done", contract: "done", bank: "done", enterprise: "墨水内容工作室", risk: "review", riskText: "需复核", riskDetail: "疑似刷单作弊 · 订单行为异常" },
+  { author: "大象叔叔", authorId: "AUTH-10035", phone: "13800001035", verified: "done", contract: "done", bank: "done", enterprise: "个人主体", risk: "normal", riskText: "正常", riskDetail: "未发现异常" },
+  { author: "橙子老师", authorId: "AUTH-10041", phone: "13800001041", verified: "pending", contract: "pending", bank: "pending", enterprise: "个人主体", risk: "profile", riskText: "需补资料", riskDetail: "实名认证资料未齐全" }
 ];
 
 const bdOwners = [
@@ -109,7 +109,9 @@ const state = {
   bdEditingAuthorId: null,
   bdQuery: "",
   bdDraftOwnerId: "",
-  bdDraftOwnerName: ""
+  bdDraftOwnerName: "",
+  incomeSortKey: "",
+  incomeSortDirection: "desc"
 };
 
 const routeMeta = {
@@ -476,7 +478,15 @@ function renderCreatorIncomeBase() {
     group.share += row.share;
     group.refund += row.refund;
   });
-  const groups = [...groupedMap.values()];
+  const groups = [...groupedMap.values()].sort((a, b) => {
+    const sortKey = state.incomeSortKey;
+    if (!sortKey) return a.author.localeCompare(b.author, "zh-CN");
+    const aValue = sortKey === "collections" ? a.collections.size : a.gross;
+    const bValue = sortKey === "collections" ? b.collections.size : b.gross;
+    const delta = Number(bValue) - Number(aValue);
+    if (delta !== 0) return state.incomeSortDirection === "asc" ? -delta : delta;
+    return a.author.localeCompare(b.author, "zh-CN");
+  });
   const bdOptions = bdOwners.map((owner) => `<option value="${owner.employeeId}" ${incomeBdOwner === owner.employeeId ? "selected" : ""}>${owner.name} · ${owner.employeeId}</option>`).join("");
   const filter = `<div class="card filter-card"><div class="filter-row"><span class="filter-label">收入筛选</span><div class="field-wrap"><span class="search-icon">⌕</span><input class="field search" data-filter="incomeAuthor" value="${escapeHtml(state.filters.incomeAuthor || "")}" placeholder="搜索创作者" /></div><select class="field select-field" data-filter="incomePeriod"><option value="">全部周期</option><option value="7" ${state.filters.incomePeriod === "7" ? "selected" : ""}>近 7 天</option><option value="30" ${state.filters.incomePeriod === "30" ? "selected" : ""}>近 30 天</option></select><select class="field select-field" data-filter="incomeContract"><option value="">全部签约状态</option><option value="done" ${incomeContract === "done" ? "selected" : ""}>已签约</option><option value="pending" ${incomeContract === "pending" ? "selected" : ""}>待签约</option></select><select class="field select-field" data-filter="incomeBank"><option value="">全部绑卡状态</option><option value="done" ${incomeBank === "done" ? "selected" : ""}>已绑卡</option><option value="pending" ${incomeBank === "pending" ? "selected" : ""}>待绑卡</option></select><select class="field select-field" data-filter="incomeBdOwner"><option value="">全部 BD 责任人</option><option value="unassigned" ${incomeBdOwner === "unassigned" ? "selected" : ""}>未分配</option>${bdOptions}</select><select class="field select-field month-select" data-filter="incomeMonth"><option value="2026-10" ${incomeMonth === "2026-10" ? "selected" : ""}>账期选择：2026 年 10 月</option><option value="2026-09" ${incomeMonth === "2026-09" ? "selected" : ""}>账期选择：2026 年 09 月</option></select><span class="filter-spacer"></span><button class="btn btn-small" data-action="clear-filters">清空筛选</button><button class="btn btn-small btn-primary" data-action="export-income">↓ 导出明细</button></div></div>`;
   const trendRange = state.filters.incomeTrendRange || "30";
@@ -509,8 +519,13 @@ function renderCreatorIncomeBase() {
   const axisLabels = [0, 0.25, 0.5, 0.75, 1].map((ratio) => formatMoney(Math.round(trendMax - (trendMax - scaleMin) * ratio)));
   const chartLabelIndexes = [...new Set([0, Math.round((trend.length - 1) * 0.25), Math.round((trend.length - 1) * 0.5), Math.round((trend.length - 1) * 0.75), trend.length - 1])];
   const chartLabels = chartLabelIndexes.map((index) => `<span>${trend[index].date}</span>`).join("");
-  const rowsHtml = groups.map((group) => `<tr><td><div class="author-cell"><button class="creator-link" data-action="view-creator-diagnosis" data-author-id="${group.authorId}">${escapeHtml(group.author)}</button><span>${escapeHtml(group.authorId)}</span></div></td><td>${contractStatusCell(group)}</td><td>${accountStatusTag(group.bank)}</td><td><span class="enterprise-cell">${escapeHtml(group.enterprise)}</span></td><td>${riskStatusTag(group.risk, group.riskText)}<span class="risk-detail">${escapeHtml(group.riskDetail)}</span></td><td>${renderBdOwnerCell(group)}</td><td class="mono">${group.collections.size} 个</td><td class="mono">${formatNumber(group.orders)}</td><td class="mono strong">${formatMoney(group.gross)}</td><td class="mono strong">${formatMoney(group.share)}</td><td class="action-col"><button class="btn-text danger" data-action="unbind-realname" data-author-id="${group.authorId}">解绑实名</button></td></tr>`).join("");
-  const table = groups.length ? `<table class="merged-account-table"><thead><tr class="table-group-row"><th rowspan="2">创作者</th><th colspan="5">账号与风控</th><th colspan="4">收入汇总</th><th rowspan="2" class="action-col">操作</th></tr><tr><th>合同签约</th><th>银行卡</th><th>关联企业</th><th>安全风险</th><th>BD 责任人</th><th>合集数</th><th>总订单</th><th>总收入</th><th>创作者分成</th></tr></thead><tbody>${rowsHtml}</tbody></table>` : emptyState("暂无匹配创作者", "调整作者、签约、绑卡或 BD 责任人筛选试试");
+  const sortButton = (key, label) => {
+    const active = state.incomeSortKey === key;
+    const icon = active ? (state.incomeSortDirection === "asc" ? "↑" : "↓") : "↕";
+    return `<button type="button" class="table-sort-button${active ? " is-active" : ""}" data-action="sort-income" data-sort-key="${key}" aria-label="按${label}${active && state.incomeSortDirection === "asc" ? "升序" : "降序"}排序" aria-sort="${active ? state.incomeSortDirection : "none"}"><span>${label}</span><span class="table-sort-icon">${icon}</span></button>`;
+  };
+  const rowsHtml = groups.map((group) => `<tr><td><div class="author-cell"><button class="creator-link" data-action="view-creator-diagnosis" data-author-id="${group.authorId}">${escapeHtml(group.author)}</button><span>${escapeHtml(group.authorId)}</span></div></td><td>${renderBdOwnerCell(group)}</td><td>${contractStatusCell(group)}</td><td>${accountStatusTag(group.bank)}</td><td><span class="enterprise-cell">${escapeHtml(group.enterprise)}</span></td><td>${riskStatusTag(group.risk, group.riskText)}<span class="risk-detail">${escapeHtml(group.riskDetail)}</span></td><td class="mono">${group.collections.size} 个</td><td class="mono">${formatNumber(group.orders)}</td><td class="mono strong">${formatMoney(group.gross)}</td><td class="mono strong">${formatMoney(group.share)}</td><td class="action-col"><div class="row-actions action-stack"><button class="btn-text danger" data-action="unbind-realname" data-author-id="${group.authorId}">解绑实名</button><button class="btn-text" data-action="view-phone" data-author-id="${group.authorId}">查看手机号</button></div></td></tr>`).join("");
+  const table = groups.length ? `<table class="merged-account-table"><thead><tr class="table-group-row"><th rowspan="2">创作者</th><th rowspan="2">BD 责任人</th><th colspan="4">账号与风控</th><th colspan="4">收入汇总</th><th rowspan="2" class="action-col">操作</th></tr><tr><th>合同签约</th><th>银行卡</th><th>关联企业</th><th>安全风险</th><th>${sortButton("collections", "合集数")}</th><th>总订单</th><th>${sortButton("gross", "总收入")}</th><th>创作者分成</th></tr></thead><tbody>${rowsHtml}</tbody></table>` : emptyState("暂无匹配创作者", "调整作者、签约、绑卡或 BD 责任人筛选试试");
   return `${pageHead("创作者运营", "创作者收入", "按创作者和时间周期汇总查看收入分成与账号状态。") }<div class="metric-grid account-metrics">${metricCard("实名完成率", `${completedRate("verified")}<small>%</small>`, `${filteredAccounts.length} 位创作者`, "✓")}${metricCard("合同签约率", `${completedRate("contract")}<small>%</small>`, "影响合作与结算", "▣")}${metricCard("银行卡绑定率", `${completedRate("bank")}<small>%</small>`, "影响打款资格", "¥")}${metricCard("风险待处理", riskCount, riskCount ? "需运营复核" : "暂无风险", "!", riskCount ? "down" : "")}</div><div class="finance-grid"><div class="card chart-card"><div class="insight-head"><div><div class="insight-title">收入趋势</div><div class="insight-sub">近 ${trendRange} 天 · 每日数据 · 单位：元</div></div><select class="duration-select" data-filter="incomeTrendRange" aria-label="收入趋势时间范围"><option value="30" ${trendRange === "30" ? "selected" : ""}>近 30 天</option><option value="90" ${trendRange === "90" ? "selected" : ""}>近 90 天</option></select></div><div class="chart-with-axis"><div class="chart-y-axis">${axisLabels.map((label) => `<span>${label}</span>`).join("")}</div><div class="chart-wrap"><svg class="chart-svg" viewBox="0 0 100 100" preserveAspectRatio="none">${chartSvg}${chartHoverTargets}</svg><div class="trend-tooltip" role="status" aria-live="polite"></div></div></div><div class="chart-labels">${chartLabels}</div><div class="chart-legend"><span><i class="line-dot"></i>平台总流水</span><span><i class="line-dot orange"></i>UGC来源营收</span><span><i class="line-dot green"></i>创作者收入</span></div></div><div class="card quick-card"><h3>收入贡献 Top 3</h3><div class="quick-list"><div class="quick-item"><div class="quick-rank">1</div><div><strong>周老师的奇妙课</strong><span>6 个合集 · 贡献 28%</span></div><div class="quick-value">¥48,620</div></div><div class="quick-item"><div class="quick-rank">2</div><div><strong>林间心理屋</strong><span>3 个合集 · 贡献 19%</span></div><div class="quick-value">¥32,780</div></div><div class="quick-item"><div class="quick-rank">3</div><div><strong>朵朵讲故事</strong><span>5 个合集 · 贡献 16%</span></div><div class="quick-value">¥28,140</div></div></div><div class="quick-status-placeholder"></div></div></div>${filter}<div class="card table-card"><div class="table-head"><div><span class="table-title">创作者收入与账号状态</span><span class="table-caption">共 ${groups.length} 位创作者 · 资料状态影响结算资格</span></div><span class="sortable-hint">BD 责任人可单独维护</span></div><div class="table-wrap">${table}</div></div>`;
 }
 
@@ -628,7 +643,16 @@ function handleClick(event) {
   if (action === "clear-filters") { state.filters = {}; render(); return; }
   if (action === "set-income-view") { state.filters.incomeView = target.dataset.view || "authors"; render(); return; }
   if (action === "set-workboard-view") { state.filters.workboardView = target.dataset.view || "authors"; render(); return; }
+  if (action === "sort-income") {
+    const key = target.dataset.sortKey;
+    if (!["collections", "gross"].includes(key)) return;
+    if (state.incomeSortKey === key) state.incomeSortDirection = state.incomeSortDirection === "asc" ? "desc" : "asc";
+    else { state.incomeSortKey = key; state.incomeSortDirection = "desc"; }
+    render();
+    return;
+  }
   if (action === "view-creator-diagnosis") { location.hash = `#/creator-diagnosis/${target.dataset.authorId}`; return; }
+  if (action === "view-phone") { openPhoneModal(target.dataset.authorId); return; }
   if (action === "copy-contract-link") {
     const account = creatorAccounts.find((item) => item.authorId === target.dataset.authorId);
     if (!account) return;
@@ -811,6 +835,13 @@ function openMicroModal(preselected = "") {
 function confirmAction(title, text, callback) {
   state.confirmCallback = callback;
   $("#modal-wrap").innerHTML = `<div class="modal"><div class="confirm-body"><div class="confirm-icon">!</div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></div><div class="modal-foot"><button class="btn" data-action="confirm-cancel">取消</button><button class="btn btn-primary" data-action="confirm-ok">确认操作</button></div></div>`;
+  $("#modal-wrap").classList.remove("hidden");
+}
+
+function openPhoneModal(authorId) {
+  const account = creatorAccounts.find((item) => item.authorId === authorId);
+  if (!account) { toast("未找到该作者的手机号", "error"); return; }
+  $("#modal-wrap").innerHTML = `<div class="modal phone-modal"><div class="modal-head"><div><h2>查看手机号</h2><p>${escapeHtml(account.author)} · ${escapeHtml(account.authorId)}</p></div><button class="close-btn" data-action="close-modal">×</button></div><div class="modal-body"><div class="phone-info"><span>登录手机号</span><strong class="phone-display">${escapeHtml(account.phone)}</strong></div><p class="form-hint">该手机号为 Demo mock 数据，仅用于运营查看演示。</p></div><div class="modal-foot"><button class="btn btn-primary" data-action="close-modal">关闭</button></div></div>`;
   $("#modal-wrap").classList.remove("hidden");
 }
 

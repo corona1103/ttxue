@@ -4,7 +4,7 @@
 
 **Goal:** 在作者跟进页增加查看手机号只读弹窗，并为合集数、总收入增加升降序排序。
 
-**Architecture:** 复用现有单文件 Demo 的数据、状态、事件委托和 modal 体系。在 `renderCreatorIncomeBase` 中生成排序表头与排序后的行，在 `handleClick` 中处理排序和手机号操作；手机号 mock 数据挂在 `creatorAccounts` 上，样式只补充表头排序按钮与手机号展示样式。
+**Architecture:** 复用现有单文件 Demo 的数据、状态、事件委托和 modal 体系。在 `renderCreatorIncomeBase` 中生成排序表头、BD 前置后的列结构与排序后的行，在 `handleClick` 中处理排序和手机号操作；手机号 mock 数据挂在 `creatorAccounts` 上，样式只补充表头排序按钮与手机号展示样式。
 
 **Tech Stack:** 原生 JavaScript、HTML 模板字符串、CSS、浏览器 Blob/DOM API。
 
@@ -54,6 +54,20 @@
 - [ ] **Step 5: 运行 `node --check app.js` 与 `git diff --check`**
 
 预期：两条命令均成功。
+
+### Task 2.1: 将 BD 责任人列移动到创作者之后
+
+**Files:**
+- Modify: `/Users/tal/Desktop/天天学/ttxue/product-ops-demo/app.js`
+- Modify: `/Users/tal/Desktop/天天学/ttxue/product-ops-demo/styles.css`
+
+- [ ] **Step 1: 调整收入表表头分组与行单元格顺序**
+
+将 `BD 责任人` 从账号与风控分组中移出，放到“创作者”列后；新的分组为 `创作者`、`BD 责任人`、`账号与风控`、`收入汇总`、`操作`。
+
+- [ ] **Step 2: 同步调整固定列与列宽 CSS**
+
+让创作者列继续左侧吸附，BD 责任人列紧跟其后并在横向滚动时保持可读；同步修正合并表格各列的 `nth-child` 宽度映射。
 
 ### Task 3: 增加查看手机号弹窗
 
