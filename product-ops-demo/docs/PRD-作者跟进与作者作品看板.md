@@ -219,6 +219,8 @@
 | 12 | 付费完播率 | `paidCompletion80` | percentage | 付费视频观看达到 80% 的比例 |
 | 13 | 作者收入 | `income` | money | 当前统计周期作者收入 |
 | 14 | 激励成本 | `cost` | money | 平台为作者或内容投入的激励成本 |
+| 15 | 入驻天数 | `joinedDays` | integer/天 | 从作者入驻平台至统计日的自然日数；页面展示为“{n} 天” |
+| 16 | 首发日期 | `firstPublishDate` | date | 作者首个作品首次发布的日期，格式 `YYYY-MM-DD` |
 
 ### 4.4 作者视图辅助数据字段
 
@@ -290,7 +292,7 @@
 
 作者视图 CSV 字段顺序：
 
-`作者`、`加广标识`、`潜力层级`、`剧集个数`、`更新频次`、`视频个数`、`免费平均播放量`、`免费完播率`、`互动率`、`7日粉丝增长`、`累计粉丝量`、`付费转化率`、`付费完播率`、`作者收入`、`激励成本`。
+`作者`、`加广标识`、`潜力层级`、`剧集个数`、`更新频次`、`视频个数`、`免费平均播放量`、`免费完播率`、`互动率`、`7日粉丝增长`、`累计粉丝量`、`付费转化率`、`付费完播率`、`作者收入`、`激励成本`、`入驻天数`、`首发日期`。
 
 #### 作品视图导出
 
@@ -334,7 +336,7 @@
 
 ### 5.3 作者看板 `creatorObservationRow`
 
-核心字段为：`author`、`authorId`、`level`、`works`、`episodeStructure`、`cadence`、`views`、`completion`、`conversion`、`income`、`platform`、`cost`、`retention`、`potential`、`status`、`boosted`。
+核心字段为：`author`、`authorId`、`level`、`works`、`episodeStructure`、`cadence`、`views`、`completion`、`conversion`、`income`、`platform`、`cost`、`retention`、`potential`、`status`、`boosted`、`joinedDays`、`firstPublishDate`。
 
 指标扩展字段为：`adExposure`、`adCtr`、`bounce2s`、`completion30`、`completion80`、`serialRate`、`likeRate`、`commentRate`、`collectRate`、`danmakuRate`、`purchaseCtr`、`attributedOrders`、`gmvPerThousand`、`paidCompletion80`、`paidInteractionRate`、`refundRate`、`freeVideos`、`followers7d`、`followersTotal`。
 
@@ -343,6 +345,8 @@
 - `episodeStructure` 优先于 `works` 作为作者表“剧集个数”展示值；没有结构化文案时按 `1个{works}集`生成。
 - `boosted=true` 仅展示“加广”标签，不参与收入或指标计算。
 - `status` 用于潜力标签颜色，`potential` 用于标签文案。
+- `joinedDays` 为作者入驻至统计日的自然日数，作者表末列展示并随作者数据导出。
+- `firstPublishDate` 为作者首个作品首次发布日期，作者表末列展示并随作者数据导出。
 
 ### 5.4 作品看板 `workObservationRow`
 
@@ -380,7 +384,7 @@
 ### 作者作品看板
 
 - [ ] 作者和作品为两个独立 Tab，修改作者字段不影响作品表。
-- [ ] 作者表包含 14 个字段列，剧集个数统一为“x个y集”。
+- [ ] 作者表包含 16 个字段列，剧集个数统一为“x个y集”，末两列为入驻天数和首发日期。
 - [ ] 作者表移除 30 日留存，7 日粉丝增长后展示累计粉丝量。
 - [ ] 作者作品看板支持按潜力筛选；作者和作品视图分别保留自己的潜力筛选状态。
 - [ ] 部分作者展示“加广”标签，潜力层级仅保留彩色标签。
