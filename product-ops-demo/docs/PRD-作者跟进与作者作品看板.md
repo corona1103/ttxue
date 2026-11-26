@@ -214,11 +214,11 @@
 | 7 | 免费完播率 | `completion` | percentage | 免费视频完成观看的用户/播放比例 |
 | 8 | 互动率 | `likeRate + commentRate + collectRate + danmakuRate` | percentage | 点赞、评论、收藏、弹幕率之和；四项不再拆成独立列 |
 | 9 | 7日粉丝增长 | `followers7d` | integer | 最近 7 日粉丝净增长；正数带 `+` |
-| 10 | 付费转化率 | `conversion` | percentage | 产生付费行为的用户/进入付费链路用户比例 |
-| 11 | 付费完播率 | `paidCompletion80` | percentage | 付费视频观看达到 80% 的比例 |
-| 12 | 作者收入 | `income` | money | 当前统计周期作者收入 |
-| 13 | 激励成本 | `cost` | money | 平台为作者或内容投入的激励成本 |
-| 14 | 30日留存 | `retention` | percentage | 首次消费/观看用户在 30 日后仍回访或继续观看的比例 |
+| 10 | 累计粉丝量 | `followersTotal` | integer | 当前作者账号累计关注粉丝数 |
+| 11 | 付费转化率 | `conversion` | percentage | 产生付费行为的用户/进入付费链路用户比例 |
+| 12 | 付费完播率 | `paidCompletion80` | percentage | 付费视频观看达到 80% 的比例 |
+| 13 | 作者收入 | `income` | money | 当前统计周期作者收入 |
+| 14 | 激励成本 | `cost` | money | 平台为作者或内容投入的激励成本 |
 
 ### 4.4 作者视图辅助数据字段
 
@@ -290,7 +290,7 @@
 
 作者视图 CSV 字段顺序：
 
-`作者`、`加广标识`、`潜力层级`、`剧集个数`、`更新频次`、`视频个数`、`免费平均播放量`、`免费完播率`、`互动率`、`7日粉丝增长`、`付费转化率`、`付费完播率`、`作者收入`、`激励成本`、`30日留存`。
+`作者`、`加广标识`、`潜力层级`、`剧集个数`、`更新频次`、`视频个数`、`免费平均播放量`、`免费完播率`、`互动率`、`7日粉丝增长`、`累计粉丝量`、`付费转化率`、`付费完播率`、`作者收入`、`激励成本`。
 
 #### 作品视图导出
 
@@ -336,7 +336,7 @@
 
 核心字段为：`author`、`authorId`、`level`、`works`、`episodeStructure`、`cadence`、`views`、`completion`、`conversion`、`income`、`platform`、`cost`、`retention`、`potential`、`status`、`boosted`。
 
-指标扩展字段为：`adExposure`、`adCtr`、`bounce2s`、`completion30`、`completion80`、`serialRate`、`likeRate`、`commentRate`、`collectRate`、`danmakuRate`、`purchaseCtr`、`attributedOrders`、`gmvPerThousand`、`paidCompletion80`、`paidInteractionRate`、`refundRate`、`freeVideos`、`followers7d`。
+指标扩展字段为：`adExposure`、`adCtr`、`bounce2s`、`completion30`、`completion80`、`serialRate`、`likeRate`、`commentRate`、`collectRate`、`danmakuRate`、`purchaseCtr`、`attributedOrders`、`gmvPerThousand`、`paidCompletion80`、`paidInteractionRate`、`refundRate`、`freeVideos`、`followers7d`、`followersTotal`。
 
 其中：
 
@@ -381,6 +381,7 @@
 
 - [ ] 作者和作品为两个独立 Tab，修改作者字段不影响作品表。
 - [ ] 作者表包含 14 个字段列，剧集个数统一为“x个y集”。
+- [ ] 作者表移除 30 日留存，7 日粉丝增长后展示累计粉丝量。
 - [ ] 作者作品看板支持按潜力筛选；作者和作品视图分别保留自己的潜力筛选状态。
 - [ ] 部分作者展示“加广”标签，潜力层级仅保留彩色标签。
 - [ ] 作品列和潜力状态列左侧吸附。
